@@ -1,0 +1,15 @@
+# Compilação Java
+target/
+build/
+*.class
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema operacional
+Thumbs.db
+.DS_Store
+
+# Variáveis de ambiente / segredos
+.env
