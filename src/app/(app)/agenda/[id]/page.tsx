@@ -3,6 +3,8 @@ import { STATUS, linkLembrete, nomeDoDia, partesLocais, type StatusSessao } from
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { excluirSessao, mudarStatus } from "../actions";
 import { buscarSessao } from "../dados";
+import { ResumoAnamnese } from "@/components/resumo-anamnese";
+import { buscarAnamnese } from "../../clientes/[id]/buscar-cliente";
 
 // Próximos passos sugeridos para cada status.
 const ACOES: Record<StatusSessao, StatusSessao[]> = {
@@ -27,6 +29,7 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
   const sessao = await buscarSessao(id);
   const { cliente } = sessao.tatuagem;
   const inicio = partesLocais(sessao.inicio);
+  const anamnese = await buscarAnamnese(cliente.id);
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -85,6 +88,8 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
           </div>
         )}
       </dl>
+
+      <ResumoAnamnese clienteId={cliente.id} anamnese={anamnese} />
 
       <div className="flex flex-wrap gap-2">
         {ACOES[sessao.status].map((novo) => (

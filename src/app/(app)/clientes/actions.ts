@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { CONDICOES, TEXTOS } from "@/lib/anamnese";
 
 export type EstadoForm = { erro?: string } | undefined;
 
@@ -35,6 +36,29 @@ export async function salvarCliente(
 
   if (resultado.error) {
     return { erro: "Não foi possível salvar o cliente. Tente novamente." };
+  }
+
+  // A anamnese só aparece (e só é salva) na edição do cliente.
+  if (id && formData.get("com_anamnese")) {
+    const condicoes = Object.fromEntries(
+      CONDICOES.map((c) => [c.campo, formData.get(c.campo) === "on"]),
+    );
+    const textos = Object.fromEntries(TEXTOS.map((t) => [t.campo, texto(formData, t.campo)]));
+    // Não cria uma anamnese vazia só porque o cliente foi editado.
+    const preenchida =
+      formData.get("anamnese_existente") ||
+      formData.get("nada_consta") ||
+      Object.values(condicoes).some(Boolean) ||
+      Object.values(textos).some(Boolean);
+
+    if (preenchida) {
+      const { error } = await supabase
+        .from("anamneses")
+        .upsert({ cliente_id: id, ...condicoes, ...textos });
+      if (error) {
+        return { erro: "Os dados do cliente foram salvos, mas a anamnese não. Tente novamente." };
+      }
+    }
   }
 
   revalidatePath("/clientes");

@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import type { Cliente } from "@/lib/clientes";
+import { formatarData, type Cliente } from "@/lib/clientes";
+import { CONDICOES, TEXTOS, type Anamnese } from "@/lib/anamnese";
+import { partesLocais } from "@/lib/agenda";
 import { salvarCliente } from "./actions";
 
-export function ClienteForm({ cliente }: { cliente?: Cliente }) {
+type Props = {
+  cliente?: Cliente;
+  anamnese?: Anamnese | null;
+};
+
+export function ClienteForm({ cliente, anamnese }: Props) {
   const [estado, acao, pendente] = useActionState(
     salvarCliente.bind(null, cliente?.id ?? null),
     undefined,
@@ -54,6 +61,57 @@ export function ClienteForm({ cliente }: { cliente?: Cliente }) {
         Observações
         <textarea name="observacoes" rows={3} defaultValue={cliente?.observacoes ?? ""} />
       </label>
+
+      {cliente && (
+        <fieldset id="anamnese" className="flex scroll-mt-6 flex-col gap-4 border-t border-border pt-4">
+          <input type="hidden" name="com_anamnese" value="1" />
+          {anamnese && <input type="hidden" name="anamnese_existente" value="1" />}
+          <legend className="contents">
+            <span className="text-lg font-semibold">Anamnese</span>
+          </legend>
+          <p className="-mt-2 text-sm text-muted">
+            Opcional. Marque o que se aplica ao cliente.
+            {anamnese &&
+              ` Última atualização: ${formatarData(partesLocais(anamnese.atualizado_em).data)}.`}
+          </p>
+
+          {!anamnese && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="nada_consta" className="size-4 accent-accent" />
+              Cliente respondeu e não tem nada a declarar
+            </label>
+          )}
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            {CONDICOES.map((c) => (
+              <label
+                key={c.campo}
+                className="flex items-start gap-2 rounded-lg border border-border px-3 py-2 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent/5"
+              >
+                <input
+                  type="checkbox"
+                  name={c.campo}
+                  defaultChecked={anamnese?.[c.campo] ?? false}
+                  className="mt-0.5 size-4 accent-accent"
+                />
+                {c.rotulo}
+              </label>
+            ))}
+          </div>
+
+          {TEXTOS.map((t) => (
+            <label key={t.campo} className="campo">
+              {t.rotulo}
+              <textarea
+                name={t.campo}
+                rows={2}
+                placeholder={t.dica}
+                defaultValue={anamnese?.[t.campo] ?? ""}
+              />
+            </label>
+          ))}
+        </fieldset>
+      )}
 
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
 

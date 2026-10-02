@@ -4,11 +4,12 @@ import { STATUS, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
 import { createClient } from "@/lib/supabase/server";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { excluirCliente } from "../actions";
-import { buscarCliente } from "./buscar-cliente";
+import { ResumoAnamnese } from "@/components/resumo-anamnese";
+import { buscarAnamnese, buscarCliente } from "./buscar-cliente";
 
 export default async function ClientePage({ params }: PageProps<"/clientes/[id]">) {
   const { id } = await params;
-  const cliente = await buscarCliente(id);
+  const [cliente, anamnese] = await Promise.all([buscarCliente(id), buscarAnamnese(id)]);
   const idade = calcularIdade(cliente.data_nascimento);
 
   const supabase = await createClient();
@@ -81,6 +82,8 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
           </Campo>
         </div>
       </dl>
+
+      <ResumoAnamnese clienteId={cliente.id} anamnese={anamnese} />
 
       <div className="mt-2 flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">Tatuagens</h2>
