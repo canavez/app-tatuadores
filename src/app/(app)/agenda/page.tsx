@@ -1,123 +1,165 @@
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   STATUS,
   dataValida,
-  diaCurto,
+  diaDaSemanaCurto,
   hoje,
   inicioDaSemana,
+  mesAno,
   nomeDoDia,
   paraInstante,
   partesLocais,
   somarDias,
 } from "@/lib/agenda";
+import { Topo } from "@/components/topo";
+import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
 
+// Cor da barrinha lateral de cada sessão, conforme o status.
+const BARRA: Record<keyof typeof STATUS, string> = {
+  agendado: "bg-amber-500",
+  confirmado: "bg-blue-500",
+  realizado: "bg-green-500",
+  faltou: "bg-red-500",
+  cancelado: "bg-zinc-400",
+};
+
 export default async function AgendaPage({ searchParams }: PageProps<"/agenda">) {
-  const { semana } = await searchParams;
+  const { dia: diaParam } = await searchParams;
   const diaHoje = hoje();
-  const segunda = inicioDaSemana(dataValida(semana) ? semana : diaHoje);
-  const proximaSegunda = somarDias(segunda, 7);
+  const dia = dataValida(diaParam) ? diaParam : diaHoje;
+  const segunda = inicioDaSemana(dia);
   const dias = Array.from({ length: 7 }, (_, i) => somarDias(segunda, i));
 
+  // Busca a semana inteira para marcar os dias que têm sessão.
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("sessoes")
     .select(SELECT_SESSAO_COMPLETA)
     .gte("inicio", paraInstante(segunda, "00:00"))
-    .lt("inicio", paraInstante(proximaSegunda, "00:00"))
+    .lt("inicio", paraInstante(somarDias(segunda, 7), "00:00"))
     .order("inicio");
   const sessoes = (data ?? []) as unknown as SessaoCompleta[];
 
-  const porDia = new Map<string, SessaoCompleta[]>();
-  for (const s of sessoes) {
-    const dia = partesLocais(s.inicio).data;
-    porDia.set(dia, [...(porDia.get(dia) ?? []), s]);
-  }
+  const diasComSessao = new Set(
+    sessoes.filter((s) => s.status !== "cancelado").map((s) => partesLocais(s.inicio).data),
+  );
+  const doDia = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Agenda</h1>
-        <Link href="/agenda/nova" className="botao">
-          + Nova sessão
+    <>
+      <Topo
+        titulo={mesAno(dia).replace(/^./, (c) => c.toUpperCase())}
+        acoes={
+          dia !== diaHoje && (
+            <Link href="/agenda" className="botao-secundario py-1.5">
+              Hoje
+            </Link>
+          )
+        }
+      />
+
+      {/* Faixa da semana */}
+      <div className="flex items-center gap-1">
+        <Link
+          href={`/agenda?dia=${somarDias(dia, -7)}`}
+          aria-label="Semana anterior"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface"
+        >
+          <ChevronLeft className="size-5" />
+        </Link>
+        <ol className="grid flex-1 grid-cols-7 gap-1">
+          {dias.map((d) => {
+            const selecionado = d === dia;
+            const ehHoje = d === diaHoje;
+            return (
+              <li key={d}>
+                <Link
+                  href={`/agenda?dia=${d}`}
+                  aria-label={nomeDoDia(d)}
+                  aria-current={selecionado ? "date" : undefined}
+                  className={`flex flex-col items-center rounded-2xl py-2 transition ${
+                    selecionado
+                      ? "bg-accent text-accent-foreground"
+                      : ehHoje
+                        ? "text-accent"
+                        : "hover:bg-surface"
+                  }`}
+                >
+                  <span className={`text-[11px] uppercase ${selecionado ? "" : "text-muted"}`}>
+                    {diaDaSemanaCurto(d)}
+                  </span>
+                  <span className="text-lg font-semibold tabular-nums">{Number(d.slice(8))}</span>
+                  <span
+                    className={`mt-0.5 size-1.5 rounded-full ${
+                      diasComSessao.has(d)
+                        ? selecionado
+                          ? "bg-accent-foreground"
+                          : "bg-accent"
+                        : "bg-transparent"
+                    }`}
+                  />
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+        <Link
+          href={`/agenda?dia=${somarDias(dia, 7)}`}
+          aria-label="Próxima semana"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface"
+        >
+          <ChevronRight className="size-5" />
         </Link>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <Link href={`/agenda?semana=${somarDias(segunda, -7)}`} className="botao-secundario">
-          ←<span className="sr-only sm:not-sr-only sm:ml-1">Anterior</span>
-        </Link>
-        <div className="text-center">
-          <p className="font-semibold">
-            {diaCurto(segunda)} – {diaCurto(somarDias(segunda, 6))}
-          </p>
-          {segunda !== inicioDaSemana(diaHoje) && (
-            <Link href="/agenda" className="text-sm text-muted underline">
-              Voltar para hoje
-            </Link>
-          )}
-        </div>
-        <Link href={`/agenda?semana=${proximaSegunda}`} className="botao-secundario">
-          <span className="sr-only sm:not-sr-only sm:mr-1">Próxima</span>→
-        </Link>
-      </div>
+      <h2 className="mb-3 mt-6 text-sm font-semibold text-muted first-letter:uppercase">
+        {nomeDoDia(dia)}
+        {doDia.length > 0 && ` · ${doDia.length} ${doDia.length === 1 ? "sessão" : "sessões"}`}
+      </h2>
 
       {error && <p className="aviso-erro">Erro ao carregar a agenda.</p>}
 
-      <div className="flex flex-col gap-3">
-        {dias.map((dia) => {
-          const doDia = porDia.get(dia) ?? [];
-          const ehHoje = dia === diaHoje;
-          return (
-            <section
-              key={dia}
-              className={`card p-0 ${ehHoje ? "border-accent" : ""} ${dia < diaHoje ? "opacity-70" : ""}`}
+      {!error && doDia.length === 0 && (
+        <div className="card flex flex-col items-center gap-3 py-10 text-center">
+          <p className="text-muted">Dia livre</p>
+          <Link href={`/agenda/nova?data=${dia}`} className="botao-secundario">
+            Agendar neste dia
+          </Link>
+        </div>
+      )}
+
+      <ul className="flex flex-col gap-2">
+        {doDia.map((s) => (
+          <li key={s.id}>
+            <Link
+              href={`/agenda/${s.id}`}
+              className={`card flex items-stretch gap-3 p-3 transition active:scale-[0.99] ${
+                s.status === "cancelado" ? "opacity-60" : ""
+              }`}
             >
-              <header className="flex items-center justify-between border-b border-border px-4 py-2">
-                <h2 className="text-sm font-semibold first-letter:uppercase">
-                  {nomeDoDia(dia)}
-                  {ehHoje && <span className="ml-2 text-xs font-bold text-accent">HOJE</span>}
-                </h2>
-                <Link
-                  href={`/agenda/nova?data=${dia}`}
-                  className="text-sm text-muted hover:text-foreground"
-                  aria-label={`Agendar em ${nomeDoDia(dia)}`}
-                >
-                  + agendar
-                </Link>
-              </header>
-              {doDia.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-muted">Livre</p>
-              ) : (
-                <ul className="divide-y divide-border">
-                  {doDia.map((s) => (
-                    <li key={s.id}>
-                      <Link
-                        href={`/agenda/${s.id}`}
-                        className="flex flex-col gap-1 px-4 py-3 hover:bg-background sm:flex-row sm:items-center sm:gap-4"
-                      >
-                        <span className="font-mono text-sm tabular-nums">
-                          {partesLocais(s.inicio).hora}–{partesLocais(s.fim).hora}
-                        </span>
-                        <span className="flex-1">
-                          <span className="font-medium">{s.tatuagem.cliente.nome}</span>
-                          <span className="text-sm text-muted"> · {s.tatuagem.descricao}</span>
-                        </span>
-                        <span
-                          className={`self-start rounded-full px-2 py-0.5 text-xs font-semibold sm:self-auto ${STATUS[s.status].cor}`}
-                        >
-                          {STATUS[s.status].rotulo}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })}
-      </div>
-    </div>
+              <span className={`w-1 shrink-0 rounded-full ${BARRA[s.status]}`} />
+              <span className="flex w-12 shrink-0 flex-col justify-center font-mono text-sm tabular-nums">
+                <span className="font-semibold">{partesLocais(s.inicio).hora}</span>
+                <span className="text-muted">{partesLocais(s.fim).hora}</span>
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col justify-center">
+                <span className="truncate font-medium">{s.tatuagem.cliente.nome}</span>
+                <span className="truncate text-sm text-muted">{s.tatuagem.descricao}</span>
+              </span>
+              <span
+                className={`self-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[s.status].cor}`}
+              >
+                {STATUS[s.status].rotulo}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <BotaoFlutuante href={`/agenda/nova?data=${dia}`} rotulo="Nova sessão" />
+    </>
   );
 }

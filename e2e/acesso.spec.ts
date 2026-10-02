@@ -10,6 +10,15 @@ test.describe("sem login", () => {
     }
   });
 
+  test("arquivos para instalar o app abrem sem login", async ({ request }) => {
+    const manifest = await request.get("/manifest.webmanifest");
+    expect(manifest.ok()).toBe(true);
+    expect((await manifest.json()).name).toBe("Ravenn");
+    for (const icone of ["/icone-192.png", "/icone-512.png", "/icon.svg", "/apple-icon.png"]) {
+      expect((await request.get(icone)).ok(), icone).toBe(true);
+    }
+  });
+
   test("senha errada mostra aviso", async ({ page }) => {
     await page.goto("/login");
     await page.getByLabel("E-mail").fill(process.env.TESTE_EMAIL!);
@@ -22,7 +31,7 @@ test.describe("sem login", () => {
 test("logado, /login volta para a agenda", async ({ page }) => {
   await page.goto("/login");
   await expect(page).toHaveURL(/\/agenda$/);
-  await expect(page.getByRole("link", { name: "Ravenn" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Agenda" }).first()).toBeVisible();
 });
 
 test("Sair desloga só este aparelho", async ({ page, browser }) => {
@@ -35,6 +44,7 @@ test("Sair desloga só este aparelho", async ({ page, browser }) => {
   await pagina.getByRole("button", { name: "Entrar" }).click();
   await expect(pagina).toHaveURL(/\/agenda$/);
 
+  await pagina.goto("/conta");
   await pagina.getByRole("button", { name: "Sair" }).click();
   await expect(pagina).toHaveURL(/\/login$/);
   await pagina.goto("/clientes");

@@ -1,3 +1,4 @@
+import { Topo } from "@/components/topo";
 import { partesLocais } from "@/lib/agenda";
 import { SessaoForm } from "../../sessao-form";
 import { buscarSessao, opcoesDoFormulario } from "../../dados";
@@ -11,8 +12,8 @@ export default async function EditarSessaoPage({ params }: PageProps<"/agenda/[i
   const inicio = partesLocais(sessao.inicio);
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <h1 className="text-2xl font-bold">Editar sessão</h1>
+    <>
+      <Topo titulo="Editar sessão" voltar={`/agenda/${id}`} />
       <SessaoForm
         clientes={clientes}
         tatuagens={tatuagens}
@@ -27,6 +28,6 @@ export default async function EditarSessaoPage({ params }: PageProps<"/agenda/[i
           observacoes: sessao.observacoes,
         }}
       />
-    </div>
+    </>
   );
 }

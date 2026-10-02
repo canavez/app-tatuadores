@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { ChevronRight, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import type { Cliente } from "@/lib/clientes";
+import { Avatar } from "@/components/avatar";
+import { Topo } from "@/components/topo";
+import { BotaoFlutuante } from "@/components/botao-flutuante";
 
 export default async function ClientesPage({ searchParams }: PageProps<"/clientes">) {
   const { q } = await searchParams;
@@ -18,31 +22,33 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
   const clientes = (data ?? []) as Pick<Cliente, "id" | "nome" | "telefone" | "instagram">[];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Clientes</h1>
-        <Link href="/clientes/novo" className="botao">
-          + Novo cliente
-        </Link>
-      </div>
+    <>
+      <Topo titulo="Clientes" />
 
-      <form className="flex gap-2">
+      <form role="search" className="relative mb-4">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted" />
         <input
+          type="search"
           name="q"
           defaultValue={busca}
+          aria-label="Buscar clientes"
           placeholder="Buscar por nome, telefone ou Instagram"
-          className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 outline-none focus:border-foreground"
+          className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-3 outline-none focus:border-foreground"
         />
-        <button type="submit" className="botao-secundario">
-          Buscar
-        </button>
       </form>
 
       {error && <p className="aviso-erro">Erro ao carregar clientes.</p>}
 
       {!error && clientes.length === 0 && (
-        <div className="card text-center text-sm text-muted">
-          {busca ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado ainda."}
+        <div className="card flex flex-col items-center gap-3 py-10 text-center">
+          <p className="text-muted">
+            {busca ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado ainda."}
+          </p>
+          {!busca && (
+            <Link href="/clientes/novo" className="botao-secundario">
+              Cadastrar o primeiro
+            </Link>
+          )}
         </div>
       )}
 
@@ -52,17 +58,24 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
             <li key={c.id}>
               <Link
                 href={`/clientes/${c.id}`}
-                className="flex flex-col px-5 py-3 hover:bg-background sm:flex-row sm:items-center sm:justify-between"
+                className="flex items-center gap-3 px-4 py-3 active:bg-background"
               >
-                <span className="font-medium">{c.nome}</span>
-                <span className="text-sm text-muted">
-                  {[c.telefone, c.instagram && `@${c.instagram}`].filter(Boolean).join(" · ")}
+                <Avatar nome={c.nome} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{c.nome}</span>
+                  <span className="block truncate text-sm text-muted">
+                    {[c.telefone, c.instagram && `@${c.instagram}`].filter(Boolean).join(" · ") ||
+                      "Sem contato"}
+                  </span>
                 </span>
+                <ChevronRight className="size-4 shrink-0 text-muted" />
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </div>
+
+      <BotaoFlutuante href="/clientes/novo" rotulo="Novo cliente" />
+    </>
   );
 }

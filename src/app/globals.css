@@ -37,11 +37,13 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border border-border bg-surface p-5;
+    @apply rounded-2xl border border-border bg-surface p-5;
   }
   .campo {
     @apply flex flex-col gap-1 text-sm font-medium;
@@ -49,13 +51,13 @@ body {
   .campo input,
   .campo textarea,
   .campo select {
-    @apply rounded-lg border border-border bg-background px-3 py-2 text-base font-normal outline-none focus:border-foreground;
+    @apply rounded-xl border border-border bg-background px-3 py-2.5 text-base font-normal outline-none focus:border-foreground;
   }
   .botao {
-    @apply inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-50;
   }
   .botao-secundario {
-    @apply inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:bg-background;
+    @apply inline-flex items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium transition hover:bg-background;
   }
   .aviso-erro {
     @apply rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400;

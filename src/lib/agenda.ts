@@ -75,20 +75,27 @@ const formatoDia = new Intl.DateTimeFormat("pt-BR", {
   month: "long",
 });
 
-const formatoCurto = new Intl.DateTimeFormat("pt-BR", {
+const formatoMes = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "UTC",
-  day: "numeric",
-  month: "short",
+  month: "long",
+  year: "numeric",
 });
+
+const formatoDiaSemana = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC", weekday: "short" });
+
+/** "2026-10-02" → "outubro de 2026" */
+export function mesAno(data: string): string {
+  return formatoMes.format(new Date(`${data}T00:00:00Z`));
+}
+
+/** "2026-10-02" → "sex" */
+export function diaDaSemanaCurto(data: string): string {
+  return formatoDiaSemana.format(new Date(`${data}T00:00:00Z`)).replace(".", "");
+}
 
 /** "2026-10-02" → "sexta-feira, 2 de outubro" */
 export function nomeDoDia(data: string): string {
   return formatoDia.format(new Date(`${data}T00:00:00Z`));
-}
-
-/** "2026-10-02" → "2 de out." */
-export function diaCurto(data: string): string {
-  return formatoCurto.format(new Date(`${data}T00:00:00Z`));
 }
 
 export function linkLembrete(

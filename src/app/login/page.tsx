@@ -13,8 +13,10 @@ export default function LoginPage() {
   const pendente = criandoConta ? criando : entrando;
 
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
+    <main className="flex flex-1 items-center justify-center px-4 py-12 pt-[calc(env(safe-area-inset-top)+3rem)]">
       <div className="w-full max-w-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icone-192.png" alt="" className="mx-auto mb-4 size-20 rounded-3xl shadow-lg" />
         <h1 className="text-center text-3xl font-bold tracking-tight">Ravenn</h1>
         <p className="mt-2 text-center text-sm text-muted">
           Agenda, clientes e financeiro do seu estúdio

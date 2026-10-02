@@ -20,11 +20,14 @@ test("edita dados, busca e mostra links de contato", async ({ page }) => {
   await page.getByLabel("Data de nascimento").fill("2010-01-01");
   await page.getByRole("button", { name: "Salvar" }).click();
 
-  await expect(page.getByRole("link", { name: "(11) 91234-5678" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "WhatsApp" })).toHaveAttribute(
     "href",
     "https://wa.me/5511912345678",
   );
-  await expect(page.getByRole("link", { name: "@bruno.ink" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Instagram" })).toHaveAttribute(
+    "href",
+    "https://instagram.com/bruno.ink",
+  );
   await expect(page.getByText("Menor de idade")).toBeVisible();
 
   await page.goto(`/clientes?q=${encodeURIComponent("bruno.ink")}`);

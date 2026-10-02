@@ -13,9 +13,10 @@ test("agenda sessão com nova tatuagem e mostra na semana", async ({ page }) => 
   await expect(page.getByText("Aguardando sinal")).toBeVisible();
   await expect(page.getByText("Rosa fineline")).toBeVisible();
 
-  await page.getByRole("link", { name: "← Agenda" }).click();
-  const linha = page.getByRole("link", { name: new RegExp(`14:00–16:00.*Rosa fineline`) });
-  await expect(linha).toBeVisible();
+  // Voltar leva para o dia da sessão na agenda.
+  await page.getByRole("link", { name: "Voltar" }).click();
+  await expect(page).toHaveURL(`/agenda?dia=${data}`);
+  await expect(page.getByRole("link", { name: /14:00\s*16:00.*Rosa fineline/ })).toBeVisible();
 });
 
 test("bloqueia horário sobreposto, mas aceita horário colado", async ({ page }) => {

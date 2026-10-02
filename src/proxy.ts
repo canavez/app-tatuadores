@@ -6,7 +6,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Não passa pela checagem de login: arquivos do Next, manifest e imagens/ícones.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|manifest.webmanifest|.*\\.(?:svg|png|ico|jpg|jpeg|gif|webp)$).*)",
   ],
 };
