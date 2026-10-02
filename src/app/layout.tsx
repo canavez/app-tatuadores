@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ink Agenda",
+  title: "Ravenn",
   description: "Agenda, clientes e financeiro para tatuadores",
 };
 

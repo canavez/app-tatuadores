@@ -15,7 +15,7 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
-        <h1 className="text-center text-3xl font-bold tracking-tight">Ink Agenda</h1>
+        <h1 className="text-center text-3xl font-bold tracking-tight">Ravenn</h1>
         <p className="mt-2 text-center text-sm text-muted">
           Agenda, clientes e financeiro do seu estúdio
         </p>

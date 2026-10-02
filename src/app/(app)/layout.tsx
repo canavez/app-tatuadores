@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3">
           <Link href="/" className="font-bold tracking-tight">
-            Ink Agenda
+            Ravenn
           </Link>
           <nav className="flex gap-4 text-sm">
             <Link href="/agenda" className="text-muted hover:text-foreground">
