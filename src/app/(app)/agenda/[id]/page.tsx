@@ -42,7 +42,7 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm capitalize text-muted">{nomeDoDia(inicio.data)}</p>
+          <p className="text-sm first-letter:uppercase text-muted">{nomeDoDia(inicio.data)}</p>
           <h1 className="text-2xl font-bold tabular-nums">
             {inicio.hora} – {partesLocais(sessao.fim).hora}
           </h1>

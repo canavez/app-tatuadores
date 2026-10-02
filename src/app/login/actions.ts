@@ -51,6 +51,7 @@ export async function criarConta(_: EstadoLogin, formData: FormData): Promise<Es
 
 export async function sair() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // "local": sai só deste aparelho (o padrão desloga todos os aparelhos).
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/login");
 }

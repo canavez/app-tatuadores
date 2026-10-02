@@ -75,7 +75,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
               className={`card p-0 ${ehHoje ? "border-accent" : ""} ${dia < diaHoje ? "opacity-70" : ""}`}
             >
               <header className="flex items-center justify-between border-b border-border px-4 py-2">
-                <h2 className="text-sm font-semibold capitalize">
+                <h2 className="text-sm font-semibold first-letter:uppercase">
                   {nomeDoDia(dia)}
                   {ehHoje && <span className="ml-2 text-xs font-bold text-accent">HOJE</span>}
                 </h2>
