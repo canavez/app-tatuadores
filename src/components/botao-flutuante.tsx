@@ -8,7 +8,7 @@ export function BotaoFlutuante({ href, rotulo }: { href: string; rotulo: string 
       href={href}
       aria-label={rotulo}
       title={rotulo}
-      className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-30 flex size-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-lg shadow-accent/30 transition active:scale-95 md:bottom-8 md:right-[max(2rem,calc(50%-24rem+1rem))]"
+      className="print:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-30 flex size-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-lg shadow-accent/30 transition active:scale-95 md:bottom-8 md:right-[max(2rem,calc(50%-24rem+1rem))]"
     >
       <Plus className="size-7" strokeWidth={2.4} />
     </Link>

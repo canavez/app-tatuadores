@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { CalendarPlus, ChevronRight, MessageCircle, Pencil } from "lucide-react";
+import {
+  CalendarPlus,
+  ChevronRight,
+  CircleCheck,
+  FileSignature,
+  MessageCircle,
+  Pencil,
+} from "lucide-react";
 import { calcularIdade, formatarData, linkWhatsApp } from "@/lib/clientes";
 import { STATUS, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
 import { createClient } from "@/lib/supabase/server";
@@ -18,12 +25,13 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
   const supabase = await createClient();
   const { data } = await supabase
     .from("tatuagens")
-    .select("id, cliente_id, descricao, local_corpo, sessoes(id, inicio, status)")
+    .select("id, cliente_id, descricao, local_corpo, sessoes(id, inicio, status), termos(id)")
     .eq("cliente_id", id)
     .order("criado_em", { ascending: false })
     .order("inicio", { referencedTable: "sessoes" });
   const tatuagens = (data ?? []) as (Tatuagem & {
     sessoes: Pick<Sessao, "id" | "inicio" | "status">[];
+    termos: { id: string } | { id: string }[] | null;
   })[];
 
   // Só mostra os dados que foram preenchidos.
@@ -113,9 +121,12 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
         ) : (
           tatuagens.map((t) => (
             <section key={t.id} className="card p-0">
-              <header className="px-4 pb-1 pt-3">
-                <h3 className="font-medium">{t.descricao}</h3>
-                {t.local_corpo && <p className="text-sm text-muted">{t.local_corpo}</p>}
+              <header className="flex items-start gap-3 px-4 pb-1 pt-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-medium">{t.descricao}</h3>
+                  {t.local_corpo && <p className="text-sm text-muted">{t.local_corpo}</p>}
+                </div>
+                <SeloTermo tatuagemId={t.id} assinado={temTermo(t.termos)} />
               </header>
               <ul className="divide-y divide-border">
                 {t.sessoes.map((s) => {
@@ -186,6 +197,27 @@ function AcaoRapida({
     <Link href={href} className={`${classes} text-accent`}>
       {children}
       {rotulo}
+    </Link>
+  );
+}
+
+// O Supabase devolve o termo como objeto (um por tatuagem) ou lista, conforme a relação.
+function temTermo(termos: { id: string } | { id: string }[] | null): boolean {
+  return Array.isArray(termos) ? termos.length > 0 : termos !== null;
+}
+
+function SeloTermo({ tatuagemId, assinado }: { tatuagemId: string; assinado: boolean }) {
+  return (
+    <Link
+      href={`/tatuagens/${tatuagemId}/termo`}
+      className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${
+        assinado
+          ? "bg-green-500/15 text-green-700 dark:text-green-400"
+          : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+      }`}
+    >
+      {assinado ? <CircleCheck className="size-3.5" /> : <FileSignature className="size-3.5" />}
+      {assinado ? "Termo assinado" : "Termo pendente"}
     </Link>
   );
 }

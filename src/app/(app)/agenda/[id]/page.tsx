@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ChevronRight, MessageCircle, Pencil } from "lucide-react";
+import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Pencil } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { STATUS, linkLembrete, nomeDoDia, partesLocais, type StatusSessao } from "@/lib/agenda";
 import { Avatar } from "@/components/avatar";
 import { BotaoExcluir } from "@/components/botao-excluir";
@@ -32,7 +33,11 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
   const sessao = await buscarSessao(id);
   const { cliente } = sessao.tatuagem;
   const inicio = partesLocais(sessao.inicio);
-  const anamnese = await buscarAnamnese(cliente.id);
+  const supabase = await createClient();
+  const [anamnese, { data: termo }] = await Promise.all([
+    buscarAnamnese(cliente.id),
+    supabase.from("termos").select("id").eq("tatuagem_id", sessao.tatuagem_id).maybeSingle(),
+  ]);
   const ativa = sessao.status === "agendado" || sessao.status === "confirmado";
 
   return (
@@ -84,6 +89,25 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
               )}
             </p>
           </div>
+          <Link
+            href={`/tatuagens/${sessao.tatuagem_id}/termo?de=/agenda/${sessao.id}`}
+            className="flex items-center gap-3 px-4 py-3 active:bg-background"
+          >
+            {termo ? (
+              <CircleCheck className="size-5 text-green-600 dark:text-green-400" />
+            ) : (
+              <FileSignature className="size-5 text-amber-600 dark:text-amber-400" />
+            )}
+            <span className="flex-1">
+              <span className="block text-sm">Termo de consentimento</span>
+              <span
+                className={`block text-xs ${termo ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"}`}
+              >
+                {termo ? "Assinado" : "Pendente — toque para coletar a assinatura"}
+              </span>
+            </span>
+            <ChevronRight className="size-4 text-muted" />
+          </Link>
           {sessao.observacoes && (
             <div className="px-4 py-3">
               <p className="text-xs text-muted">Observações</p>

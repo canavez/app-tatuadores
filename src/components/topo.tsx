@@ -14,13 +14,13 @@ type Props = {
 /** Cabeçalho de cada tela, no estilo de app: voltar, título e ações. */
 export function Topo({ titulo, voltar, subtitulo, acoes }: Props) {
   return (
-    <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-border bg-background/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pt-0 md:backdrop-blur-none">
+    <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-border bg-background/90 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pt-0 md:backdrop-blur-none print:static print:border-0">
       <div className="flex min-h-10 items-center gap-2">
         {voltar && (
           <Link
             href={voltar}
             aria-label="Voltar"
-            className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-full text-foreground hover:bg-surface"
+            className="-ml-2 flex size-10 shrink-0 print:hidden items-center justify-center rounded-full text-foreground hover:bg-surface"
           >
             <ChevronLeft className="size-6" />
           </Link>
@@ -31,7 +31,7 @@ export function Topo({ titulo, voltar, subtitulo, acoes }: Props) {
           )}
           <h1 className="truncate text-xl font-bold tracking-tight md:text-2xl">{titulo}</h1>
         </div>
-        {acoes && <div className="flex shrink-0 items-center gap-1">{acoes}</div>}
+        {acoes && <div className="flex shrink-0 items-center gap-1 print:hidden">{acoes}</div>}
       </div>
     </div>
   );

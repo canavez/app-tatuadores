@@ -21,7 +21,7 @@ export function MenuInferior() {
   return (
     <nav
       aria-label="Menu principal"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-border bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
       <ul className="mx-auto grid max-w-md grid-cols-3">
         {ABAS.map(({ href, rotulo, Icone }) => (
@@ -47,7 +47,7 @@ export function MenuInferior() {
 export function MenuSuperior() {
   const ativa = useAbaAtiva();
   return (
-    <header className="sticky top-0 z-30 hidden border-b border-border bg-surface/90 backdrop-blur md:block">
+    <header className="sticky top-0 z-30 hidden print:hidden border-b border-border bg-surface/90 backdrop-blur md:block">
       <div className="mx-auto flex max-w-3xl items-center gap-8 px-6 py-3">
         <Link href="/agenda" className="flex items-center gap-2 font-bold tracking-tight">
           {/* eslint-disable-next-line @next/next/no-img-element */}
