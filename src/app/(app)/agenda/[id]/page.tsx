@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Pencil } from "lucide-react";
+import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Pencil, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { reais, saldo } from "@/lib/financeiro";
 import { STATUS, linkLembrete, nomeDoDia, partesLocais, type StatusSessao } from "@/lib/agenda";
 import { Avatar } from "@/components/avatar";
 import { BotaoExcluir } from "@/components/botao-excluir";
@@ -34,11 +35,19 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
   const { cliente } = sessao.tatuagem;
   const inicio = partesLocais(sessao.inicio);
   const supabase = await createClient();
-  const [anamnese, { data: termo }] = await Promise.all([
+  const [anamnese, { data: termo }, { data: financeiro }] = await Promise.all([
     buscarAnamnese(cliente.id),
     supabase.from("termos").select("id").eq("tatuagem_id", sessao.tatuagem_id).maybeSingle(),
+    supabase
+      .from("tatuagens")
+      .select("valor, pagamentos(valor)")
+      .eq("id", sessao.tatuagem_id)
+      .maybeSingle(),
   ]);
   const ativa = sessao.status === "agendado" || sessao.status === "confirmado";
+  const valor = financeiro?.valor ?? null;
+  const { pago, falta } = saldo(valor, financeiro?.pagamentos ?? []);
+  const deSessao = encodeURIComponent(`/agenda/${sessao.id}`);
 
   return (
     <>
@@ -90,6 +99,25 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
             </p>
           </div>
           <Link
+            href={`/tatuagens/${sessao.tatuagem_id}/financeiro?de=${deSessao}`}
+            className="flex items-center gap-3 px-4 py-3 active:bg-background"
+          >
+            <Wallet className="size-5 text-muted" />
+            <span className="flex-1">
+              <span className="block text-sm">Financeiro</span>
+              <span className="block text-xs text-muted tabular-nums">
+                {valor === null
+                  ? pago > 0
+                    ? `${reais(pago)} pago · valor não definido`
+                    : "Valor não definido — toque para informar"
+                  : falta
+                    ? `${reais(pago)} pago de ${reais(Number(valor))} · falta ${reais(falta)}`
+                    : `${reais(Number(valor))} · quitado`}
+              </span>
+            </span>
+            <ChevronRight className="size-4 text-muted" />
+          </Link>
+          <Link
             href={`/tatuagens/${sessao.tatuagem_id}/termo?de=/agenda/${sessao.id}`}
             className="flex items-center gap-3 px-4 py-3 active:bg-background"
           >
@@ -129,6 +157,15 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
               </button>
             </form>
           ))}
+          {sessao.status === "agendado" && (
+            <Link
+              href={`/tatuagens/${sessao.tatuagem_id}/pagamentos/novo?tipo=sinal&sessao=${sessao.id}&de=${deSessao}`}
+              className="botao-secundario gap-2 py-3 sm:py-2"
+            >
+              <Wallet className="size-4" />
+              Registrar sinal
+            </Link>
+          )}
           {cliente.telefone && ativa && (
             <a
               href={linkLembrete(cliente.telefone, cliente.nome, sessao.inicio)}

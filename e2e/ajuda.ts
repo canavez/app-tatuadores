@@ -25,13 +25,21 @@ export async function criarCliente(page: Page, nome: string): Promise<string> {
 
 export async function agendar(
   page: Page,
-  opcoes: { cliente: string; data: string; inicio: string; fim: string; novaTatuagem?: string },
+  opcoes: {
+    cliente: string;
+    data: string;
+    inicio: string;
+    fim: string;
+    novaTatuagem?: string;
+    valor?: string;
+  },
 ) {
   await page.goto("/agenda/nova");
   await page.getByLabel("Cliente").selectOption({ label: opcoes.cliente });
   if (opcoes.novaTatuagem) {
     await page.getByLabel("Tatuagem").selectOption("nova");
     await page.getByLabel("Descrição").fill(opcoes.novaTatuagem);
+    if (opcoes.valor) await page.getByLabel("Valor combinado").fill(opcoes.valor);
   }
   await page.getByLabel("Data").fill(opcoes.data);
   await page.getByLabel("Início").fill(opcoes.inicio);

@@ -105,6 +105,10 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
             Local do corpo
             <input name="local_corpo" placeholder="Ex.: antebraço direito" />
           </label>
+          <label className="campo">
+            Valor combinado
+            <input name="valor" inputMode="decimal" placeholder="Ex.: 1.500,00" />
+          </label>
         </div>
       )}
 

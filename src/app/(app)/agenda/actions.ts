@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dataValida, ehStatus, paraInstante, type StatusSessao } from "@/lib/agenda";
+import { lerReais } from "@/lib/financeiro";
 
 export type EstadoForm = { erro?: string } | undefined;
 
@@ -39,6 +40,9 @@ export async function salvarSessao(
   if (tatuagemId === "nova" && !texto(formData, "descricao")) {
     return { erro: "Descreva a nova tatuagem." };
   }
+  const valorDigitado = tatuagemId === "nova" ? texto(formData, "valor") : null;
+  const valor = lerReais(valorDigitado);
+  if (valorDigitado && valor === null) return { erro: "Valor inválido. Ex.: 1500 ou 1.500,00" };
 
   const supabase = await createClient();
 
@@ -63,6 +67,7 @@ export async function salvarSessao(
         cliente_id: clienteId,
         descricao: texto(formData, "descricao"),
         local_corpo: texto(formData, "local_corpo"),
+        valor,
       })
       .select("id")
       .single();

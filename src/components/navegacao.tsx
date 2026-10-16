@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, UserRound, Users, type LucideIcon } from "lucide-react";
+import { CalendarDays, UserRound, Users, Wallet, type LucideIcon } from "lucide-react";
 
 const ABAS: { href: string; rotulo: string; Icone: LucideIcon }[] = [
   { href: "/agenda", rotulo: "Agenda", Icone: CalendarDays },
   { href: "/clientes", rotulo: "Clientes", Icone: Users },
+  { href: "/financeiro", rotulo: "Financeiro", Icone: Wallet },
   { href: "/conta", rotulo: "Conta", Icone: UserRound },
 ];
 
@@ -23,7 +24,7 @@ export function MenuInferior() {
       aria-label="Menu principal"
       className="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-border bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-3">
+      <ul className="mx-auto grid max-w-md grid-cols-4">
         {ABAS.map(({ href, rotulo, Icone }) => (
           <li key={href}>
             <Link

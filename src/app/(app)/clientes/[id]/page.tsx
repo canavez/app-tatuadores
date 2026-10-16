@@ -6,10 +6,12 @@ import {
   FileSignature,
   MessageCircle,
   Pencil,
+  Wallet,
 } from "lucide-react";
 import { calcularIdade, formatarData, linkWhatsApp } from "@/lib/clientes";
 import { STATUS, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
 import { createClient } from "@/lib/supabase/server";
+import { reais, saldo } from "@/lib/financeiro";
 import { Avatar } from "@/components/avatar";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { BotaoIcone, Topo } from "@/components/topo";
@@ -25,13 +27,17 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
   const supabase = await createClient();
   const { data } = await supabase
     .from("tatuagens")
-    .select("id, cliente_id, descricao, local_corpo, sessoes(id, inicio, status), termos(id)")
+    .select(
+      "id, cliente_id, descricao, local_corpo, valor, sessoes(id, inicio, status), termos(id), pagamentos(valor)",
+    )
     .eq("cliente_id", id)
     .order("criado_em", { ascending: false })
     .order("inicio", { referencedTable: "sessoes" });
   const tatuagens = (data ?? []) as (Tatuagem & {
     sessoes: Pick<Sessao, "id" | "inicio" | "status">[];
     termos: { id: string } | { id: string }[] | null;
+    valor: number | null;
+    pagamentos: { valor: number }[];
   })[];
 
   // Só mostra os dados que foram preenchidos.
@@ -150,6 +156,16 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
                     </li>
                   );
                 })}
+                <li>
+                  <Link
+                    href={`/tatuagens/${t.id}/financeiro?de=${encodeURIComponent(`/clientes/${cliente.id}`)}`}
+                    className="flex items-center gap-3 px-4 py-3 text-sm active:bg-background"
+                  >
+                    <Wallet className="size-4 text-muted" />
+                    <ResumoFinanceiro valor={t.valor} pagamentos={t.pagamentos} />
+                    <ChevronRight className="ml-auto size-4 text-muted" />
+                  </Link>
+                </li>
               </ul>
             </section>
           ))
@@ -164,6 +180,29 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
         </div>
       </div>
     </>
+  );
+}
+
+function ResumoFinanceiro({
+  valor,
+  pagamentos,
+}: {
+  valor: number | null;
+  pagamentos: { valor: number }[];
+}) {
+  const { pago, falta } = saldo(valor, pagamentos);
+  if (valor === null) {
+    return <span className="text-muted">{pago > 0 ? `${reais(pago)} pago` : "Definir valor"}</span>;
+  }
+  return falta ? (
+    <span className="tabular-nums">
+      {reais(pago)} de {reais(Number(valor))}{" "}
+      <span className="text-amber-700 dark:text-amber-400">· falta {reais(falta)}</span>
+    </span>
+  ) : (
+    <span className="tabular-nums">
+      {reais(Number(valor))} <span className="text-green-700 dark:text-green-400">· quitado</span>
+    </span>
   );
 }
 
