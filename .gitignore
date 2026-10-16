@@ -44,3 +44,6 @@ next-env.d.ts
 /playwright/.auth/
 /test-results/
 /playwright-report/
+
+# log da tarefa que mantém o Supabase ativo
+scripts/*.log

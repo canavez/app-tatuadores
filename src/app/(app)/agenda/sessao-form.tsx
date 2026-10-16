@@ -27,7 +27,9 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
     salvarSessao.bind(null, sessao?.id ?? null),
     undefined,
   );
-  const [clienteId, setClienteId] = useState(sessao?.cliente_id ?? clienteInicial ?? "");
+  const [clienteId, setClienteId] = useState(
+    sessao?.cliente_id ?? clienteInicial ?? (clientes.length ? "" : "novo"),
+  );
   const tatuagensDoCliente = tatuagens.filter((t) => t.cliente_id === clienteId);
   const [tatuagemId, setTatuagemId] = useState(
     sessao?.tatuagem_id ?? (tatuagensDoCliente.length ? tatuagensDoCliente[0].id : "nova"),
@@ -37,17 +39,6 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
     setClienteId(id);
     const primeira = tatuagens.find((t) => t.cliente_id === id);
     setTatuagemId(primeira ? primeira.id : "nova");
-  }
-
-  if (clientes.length === 0) {
-    return (
-      <div className="card text-center text-sm text-muted">
-        Cadastre um cliente antes de agendar.{" "}
-        <Link href="/clientes/novo" className="font-medium text-foreground underline">
-          Novo cliente
-        </Link>
-      </div>
-    );
   }
 
   return (
@@ -68,8 +59,21 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
               {c.nome}
             </option>
           ))}
+          <option value="novo">+ Novo cliente</option>
         </select>
       </label>
+
+      {clienteId === "novo" && (
+        <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-4">
+          <label className="campo">
+            Nome do cliente *
+            <input name="cliente_nome" required autoFocus placeholder="Ex.: Ana Souza" />
+          </label>
+          <p className="text-xs text-muted">
+            Telefone, anamnese e o resto você completa depois, em Clientes.
+          </p>
+        </div>
+      )}
 
       {clienteId && (
         <label className="campo">

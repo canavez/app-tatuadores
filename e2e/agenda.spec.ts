@@ -49,6 +49,50 @@ test("conflito com tatuagem nova não deixa tatuagem órfã", async ({ page }) =
   await expect(page.getByText("Órfã")).toHaveCount(0);
 });
 
+test("cadastra cliente novo direto no agendamento", async ({ page }) => {
+  const cliente = nomeUnico("Lia");
+  const data = dataSorteada();
+
+  await page.goto("/agenda/nova");
+  await page.getByLabel("Cliente").selectOption("novo");
+  await page.getByLabel("Nome do cliente").fill(cliente);
+  await page.getByLabel("Descrição").fill("Borboleta");
+  await page.getByLabel("Data").fill(data);
+  await page.getByLabel("Início").fill("13:00");
+  await page.getByLabel("Término").fill("14:00");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByRole("heading", { name: "13:00 – 14:00" })).toBeVisible();
+
+  // O cliente aparece em Clientes, pronto para completar o cadastro.
+  await page.goto("/clientes");
+  await page.getByRole("link", { name: cliente }).click();
+  await expect(page.getByRole("heading", { name: cliente })).toBeVisible();
+  await expect(page.getByText("Borboleta")).toBeVisible();
+});
+
+test("conflito ao agendar cliente novo não deixa cliente órfão", async ({ page }) => {
+  const existente = nomeUnico("Mel");
+  await criarCliente(page, existente);
+  const data = dataSorteada();
+  await agendar(page, { cliente: existente, data, inicio: "10:00", fim: "12:00", novaTatuagem: "Lua" });
+  await expect(page.getByRole("heading", { name: "10:00 – 12:00" })).toBeVisible();
+
+  const orfao = nomeUnico("Nina");
+  await page.goto("/agenda/nova");
+  await page.getByLabel("Cliente").selectOption("novo");
+  await page.getByLabel("Nome do cliente").fill(orfao);
+  await page.getByLabel("Descrição").fill("Sol");
+  await page.getByLabel("Data").fill(data);
+  await page.getByLabel("Início").fill("11:00");
+  await page.getByLabel("Término").fill("13:00");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText(CONFLITO)).toBeVisible();
+
+  await page.goto("/clientes");
+  await expect(page.getByText(existente)).toBeVisible();
+  await expect(page.getByText(orfao)).toHaveCount(0);
+});
+
 test("término antes do início é recusado", async ({ page }) => {
   const cliente = nomeUnico("João");
   await criarCliente(page, cliente);

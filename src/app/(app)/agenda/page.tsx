@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   STATUS,
@@ -158,6 +158,16 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
           </li>
         ))}
       </ul>
+
+      {doDia.length > 0 && (
+        <Link
+          href={`/agenda/nova?data=${dia}`}
+          className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-4 text-sm font-medium text-muted transition hover:bg-surface hover:text-foreground active:scale-[0.99]"
+        >
+          <Plus className="size-4" />
+          Agendar neste dia
+        </Link>
+      )}
 
       <BotaoFlutuante href={`/agenda/nova?data=${dia}`} rotulo="Nova sessão" />
     </>

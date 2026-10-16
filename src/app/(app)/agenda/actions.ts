@@ -19,7 +19,7 @@ export async function salvarSessao(
   _: EstadoForm,
   formData: FormData,
 ): Promise<EstadoForm> {
-  const clienteId = texto(formData, "cliente_id");
+  let clienteId = texto(formData, "cliente_id");
   let tatuagemId = texto(formData, "tatuagem_id");
   const data = texto(formData, "data");
   const horaInicio = texto(formData, "hora_inicio");
@@ -34,19 +34,42 @@ export async function salvarSessao(
   if (horaFim <= horaInicio) return { erro: "O horário de término precisa ser depois do início." };
   if (!ehStatus(status)) return { erro: "Status inválido." };
 
+  const clienteNome = clienteId === "novo" ? texto(formData, "cliente_nome") : null;
+  if (clienteId === "novo" && !clienteNome) return { erro: "Informe o nome do novo cliente." };
+  if (tatuagemId === "nova" && !texto(formData, "descricao")) {
+    return { erro: "Descreva a nova tatuagem." };
+  }
+
   const supabase = await createClient();
+
+  // Cliente novo entra só com o nome; o resto é completado depois em Clientes.
+  let clienteCriado: string | null = null;
+  if (clienteId === "novo") {
+    const { data: novo, error } = await supabase
+      .from("clientes")
+      .insert({ nome: clienteNome })
+      .select("id")
+      .single();
+    if (error) return { erro: "Não foi possível cadastrar o cliente." };
+    clienteId = clienteCriado = novo.id;
+  }
 
   // Cria a tatuagem junto com a primeira sessão, se for nova.
   let tatuagemCriada: string | null = null;
   if (tatuagemId === "nova") {
-    const descricao = texto(formData, "descricao");
-    if (!descricao) return { erro: "Descreva a nova tatuagem." };
     const { data: nova, error } = await supabase
       .from("tatuagens")
-      .insert({ cliente_id: clienteId, descricao, local_corpo: texto(formData, "local_corpo") })
+      .insert({
+        cliente_id: clienteId,
+        descricao: texto(formData, "descricao"),
+        local_corpo: texto(formData, "local_corpo"),
+      })
       .select("id")
       .single();
-    if (error) return { erro: "Não foi possível cadastrar a tatuagem." };
+    if (error) {
+      if (clienteCriado) await supabase.from("clientes").delete().eq("id", clienteCriado);
+      return { erro: "Não foi possível cadastrar a tatuagem." };
+    }
     tatuagemId = tatuagemCriada = nova.id;
   }
 
@@ -63,7 +86,9 @@ export async function salvarSessao(
     : await supabase.from("sessoes").insert(dados).select("id").single();
 
   if (resultado.error) {
-    if (tatuagemCriada) await supabase.from("tatuagens").delete().eq("id", tatuagemCriada);
+    // Desfaz o que foi criado agora (apagar o cliente leva a tatuagem junto).
+    if (clienteCriado) await supabase.from("clientes").delete().eq("id", clienteCriado);
+    else if (tatuagemCriada) await supabase.from("tatuagens").delete().eq("id", tatuagemCriada);
     if (resultado.error.code === "23P01") {
       return { erro: "Já existe outra sessão nesse horário. Escolha outro horário." };
     }
@@ -71,6 +96,7 @@ export async function salvarSessao(
   }
 
   revalidatePath("/agenda");
+  if (clienteCriado) revalidatePath("/clientes");
   revalidatePath(`/clientes/${clienteId}`);
   redirect(`/agenda/${resultado.data.id}`);
 }
