@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { semLimpar } from "@/lib/formulario";
 import { Assinatura } from "@/components/assinatura";
 import { TEXTO_IMAGEM, textoDoTermo } from "@/lib/termo";
 import { assinarTermo } from "./actions";
@@ -39,7 +40,7 @@ export function TermoForm(props: Props) {
   });
 
   return (
-    <form action={acao} className="flex flex-col gap-4">
+    <form onSubmit={semLimpar(acao)} className="flex flex-col gap-4">
       <div className="card flex flex-col gap-4">
         <label className="campo">
           Nome completo de quem assina *

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { semLimpar } from "@/lib/formulario";
 import { STATUS, type Tatuagem } from "@/lib/agenda";
 import { reaisParaCampo } from "@/lib/financeiro";
 import { salvarSessao } from "./actions";
@@ -44,7 +45,7 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
   }
 
   return (
-    <form action={acao} className="card flex flex-col gap-4">
+    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
       <label className="campo">
         Cliente *
         <select

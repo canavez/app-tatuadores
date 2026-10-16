@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { semLimpar } from "@/lib/formulario";
 import { criarConta, entrar } from "./actions";
 
 export default function LoginPage() {
@@ -23,7 +24,7 @@ export default function LoginPage() {
         </p>
 
         <form
-          action={criandoConta ? acaoCriar : acaoEntrar}
+          onSubmit={semLimpar(criandoConta ? acaoCriar : acaoEntrar)}
           className="card mt-8 flex flex-col gap-4"
         >
           {criandoConta && (

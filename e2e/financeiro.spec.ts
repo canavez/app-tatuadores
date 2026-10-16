@@ -54,13 +54,11 @@ test("valor por sessão: inválido é recusado, editar define e excluir pagament
   });
   await expect(page.getByText("Valor inválido. Ex.: 1500 ou 1.500,00")).toBeVisible();
 
-  await agendar(page, {
-    cliente,
-    data: dataSorteada(),
-    inicio: "10:00",
-    fim: "12:00",
-    novaTatuagem: "Âncora",
-  });
+  // O erro não apaga o que já foi preenchido: basta corrigir o valor e salvar.
+  await expect(page.getByLabel("Descrição")).toHaveValue("Âncora");
+  await expect(page.getByLabel("Início")).toHaveValue("10:00");
+  await page.getByLabel("Valor da sessão").fill("");
+  await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText("Valor da sessão não definido.")).toBeVisible();
 
   await page.getByRole("link", { name: "Informar valor" }).click();

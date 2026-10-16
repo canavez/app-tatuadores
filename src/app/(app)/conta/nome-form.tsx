@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
+import { semLimpar } from "@/lib/formulario";
 import { salvarNome } from "./actions";
 
 export function NomeForm({ nome }: { nome: string }) {
   const [estado, acao, pendente] = useActionState(salvarNome, undefined);
 
   return (
-    <form action={acao} className="card flex flex-col gap-3">
+    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-3">
       <label className="campo">
         Seu nome profissional
         <input name="nome" required defaultValue={nome} placeholder="Ex.: Ana Ravenn Tattoo" />

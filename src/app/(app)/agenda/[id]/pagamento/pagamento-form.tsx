@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { semLimpar } from "@/lib/formulario";
 import { FORMAS, TIPOS, type TipoPagamento } from "@/lib/financeiro";
 import { registrarPagamento } from "../../actions";
 
@@ -54,7 +55,7 @@ export function PagamentoForm({
   );
 
   return (
-    <form action={acao} className="card flex flex-col gap-4">
+    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">Tipo</legend>
         <Opcoes nome="tipo" opcoes={TIPOS} inicial={tipoInicial} />

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { semLimpar } from "@/lib/formulario";
 import { formatarData, type Cliente } from "@/lib/clientes";
 import { CONDICOES, TEXTOS, type Anamnese } from "@/lib/anamnese";
 import { partesLocais } from "@/lib/agenda";
@@ -19,7 +20,7 @@ export function ClienteForm({ cliente, anamnese }: Props) {
   );
 
   return (
-    <form action={acao} className="card flex flex-col gap-4">
+    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
       <label className="campo">
         Nome *
         <input name="nome" required defaultValue={cliente?.nome} autoComplete="off" />
