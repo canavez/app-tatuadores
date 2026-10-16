@@ -26,6 +26,7 @@ export default async function EditarSessaoPage({ params }: PageProps<"/agenda/[i
           hora_fim: partesLocais(sessao.fim).hora,
           status: sessao.status,
           observacoes: sessao.observacoes,
+          valor: sessao.valor,
         }}
       />
     </>

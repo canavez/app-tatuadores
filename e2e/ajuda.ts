@@ -39,8 +39,8 @@ export async function agendar(
   if (opcoes.novaTatuagem) {
     await page.getByLabel("Tatuagem").selectOption("nova");
     await page.getByLabel("Descrição").fill(opcoes.novaTatuagem);
-    if (opcoes.valor) await page.getByLabel("Valor combinado").fill(opcoes.valor);
   }
+  if (opcoes.valor) await page.getByLabel("Valor da sessão").fill(opcoes.valor);
   await page.getByLabel("Data").fill(opcoes.data);
   await page.getByLabel("Início").fill(opcoes.inicio);
   await page.getByLabel("Término").fill(opcoes.fim);

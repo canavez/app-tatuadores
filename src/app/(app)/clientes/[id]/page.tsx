@@ -11,7 +11,7 @@ import {
 import { calcularIdade, formatarData, linkWhatsApp } from "@/lib/clientes";
 import { STATUS, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
 import { createClient } from "@/lib/supabase/server";
-import { reais, saldo } from "@/lib/financeiro";
+import { reais, saldoSessao, somar } from "@/lib/financeiro";
 import { Avatar } from "@/components/avatar";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { BotaoIcone, Topo } from "@/components/topo";
@@ -28,16 +28,16 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
   const { data } = await supabase
     .from("tatuagens")
     .select(
-      "id, cliente_id, descricao, local_corpo, valor, sessoes(id, inicio, status), termos(id), pagamentos(valor)",
+      "id, cliente_id, descricao, local_corpo, termos(id), sessoes(id, inicio, status, valor, pagamentos(valor))",
     )
     .eq("cliente_id", id)
     .order("criado_em", { ascending: false })
     .order("inicio", { referencedTable: "sessoes" });
   const tatuagens = (data ?? []) as (Tatuagem & {
-    sessoes: Pick<Sessao, "id" | "inicio" | "status">[];
+    sessoes: (Pick<Sessao, "id" | "inicio" | "status" | "valor"> & {
+      pagamentos: { valor: number }[];
+    })[];
     termos: { id: string } | { id: string }[] | null;
-    valor: number | null;
-    pagamentos: { valor: number }[];
   })[];
 
   // Só mostra os dados que foram preenchidos.
@@ -146,6 +146,9 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
                         <span className="tabular-nums">
                           {formatarData(inicio.data)} às {inicio.hora}
                         </span>
+                        {s.valor !== null && (
+                          <span className="text-muted tabular-nums">{reais(Number(s.valor))}</span>
+                        )}
                         <span
                           className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[s.status].cor}`}
                         >
@@ -156,16 +159,7 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
                     </li>
                   );
                 })}
-                <li>
-                  <Link
-                    href={`/tatuagens/${t.id}/financeiro?de=${encodeURIComponent(`/clientes/${cliente.id}`)}`}
-                    className="flex items-center gap-3 px-4 py-3 text-sm active:bg-background"
-                  >
-                    <Wallet className="size-4 text-muted" />
-                    <ResumoFinanceiro valor={t.valor} pagamentos={t.pagamentos} />
-                    <ChevronRight className="ml-auto size-4 text-muted" />
-                  </Link>
-                </li>
+                <ResumoFinanceiro sessoes={t.sessoes} />
               </ul>
             </section>
           ))
@@ -183,26 +177,28 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
   );
 }
 
+/** Total da tatuagem: soma das sessões que contam (não canceladas nem com falta). */
 function ResumoFinanceiro({
-  valor,
-  pagamentos,
+  sessoes,
 }: {
-  valor: number | null;
-  pagamentos: { valor: number }[];
+  sessoes: { valor: number | null; status: string; pagamentos: { valor: number }[] }[];
 }) {
-  const { pago, falta } = saldo(valor, pagamentos);
-  if (valor === null) {
-    return <span className="text-muted">{pago > 0 ? `${reais(pago)} pago` : "Definir valor"}</span>;
-  }
-  return falta ? (
-    <span className="tabular-nums">
-      {reais(pago)} de {reais(Number(valor))}{" "}
-      <span className="text-amber-700 dark:text-amber-400">· falta {reais(falta)}</span>
-    </span>
-  ) : (
-    <span className="tabular-nums">
-      {reais(Number(valor))} <span className="text-green-700 dark:text-green-400">· quitado</span>
-    </span>
+  const comValor = sessoes.filter((s) => s.valor !== null);
+  if (comValor.length === 0) return null;
+  const saldos = sessoes.map(saldoSessao);
+  const pago = somar(saldos.map((s) => s.pago));
+  const falta = somar(saldos.map((s) => s.falta));
+  const total = somar(
+    comValor.filter((s) => s.status !== "cancelado" && s.status !== "faltou").map((s) => s.valor),
+  );
+  return (
+    <li className="flex items-center gap-3 px-4 py-3 text-sm">
+      <Wallet className="size-4 text-muted" />
+      <span className="tabular-nums">
+        Total {reais(total)} · <span className="text-green-700 dark:text-green-400">{reais(pago)} pago</span>
+        {falta > 0 && <span className="text-amber-700 dark:text-amber-400"> · falta {reais(falta)}</span>}
+      </span>
+    </li>
   );
 }
 

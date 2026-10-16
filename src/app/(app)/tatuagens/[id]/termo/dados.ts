@@ -22,12 +22,9 @@ export type TatuagemDoTermo = {
   cliente: Cliente;
 };
 
-/** Tela de onde o termo/financeiro foi aberto; só aceita telas do próprio app. */
+/** Tela de onde o termo foi aberto (sessão ou cliente); só aceita telas do próprio app. */
 export function destinoSeguro(de: unknown): string | null {
-  return typeof de === "string" &&
-    (/^\/(agenda|clientes)\/[\w-]+$/.test(de) || /^\/financeiro(\?mes=\d{4}-\d{2})?$/.test(de))
-    ? de
-    : null;
+  return typeof de === "string" && /^\/(agenda|clientes)\/[\w-]+$/.test(de) ? de : null;
 }
 
 export function urlDoTermo(tatuagemId: string, de: string | null): string {

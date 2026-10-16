@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { STATUS, type Tatuagem } from "@/lib/agenda";
+import { reaisParaCampo } from "@/lib/financeiro";
 import { salvarSessao } from "./actions";
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
     hora_fim: string;
     status: string;
     observacoes: string | null;
+    valor: number | null;
   };
   clienteInicial?: string;
   dataInicial?: string;
@@ -105,10 +107,6 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
             Local do corpo
             <input name="local_corpo" placeholder="Ex.: antebraço direito" />
           </label>
-          <label className="campo">
-            Valor combinado
-            <input name="valor" inputMode="decimal" placeholder="Ex.: 1.500,00" />
-          </label>
         </div>
       )}
 
@@ -127,6 +125,19 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
         </label>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="campo">
+          Valor da sessão
+          <input
+            name="valor"
+            inputMode="decimal"
+            defaultValue={reaisParaCampo(sessao?.valor ?? null)}
+            placeholder="Ex.: 800,00"
+          />
+          <span className="text-xs font-normal text-muted">
+            Cobra pelo projeto? Coloque o total na primeira sessão e 0 nas outras.
+          </span>
+        </label>
       <label className="campo">
         Status
         <select name="status" defaultValue={sessao?.status ?? "agendado"}>
@@ -137,6 +148,7 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
           ))}
         </select>
       </label>
+      </div>
 
       <label className="campo">
         Observações

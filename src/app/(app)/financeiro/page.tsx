@@ -1,21 +1,22 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { hoje, mesAno } from "@/lib/agenda";
+import { hoje, mesAno, partesLocais } from "@/lib/agenda";
 import { formatarData } from "@/lib/clientes";
-import { FORMAS, TIPOS, reais, saldo, type Pagamento } from "@/lib/financeiro";
+import { FORMAS, TIPOS, reais, saldoSessao, somar, type Pagamento } from "@/lib/financeiro";
 import { Topo } from "@/components/topo";
 
 type PagamentoDoMes = Pagamento & {
-  tatuagem: { id: string; descricao: string; cliente: { nome: string } };
+  sessao: { id: string; tatuagem: { descricao: string; cliente: { nome: string } } };
 };
 
-type TatuagemAReceber = {
+type SessaoAReceber = {
   id: string;
-  descricao: string;
+  inicio: string;
+  status: string;
   valor: number;
-  cliente: { nome: string };
   pagamentos: { valor: number }[];
+  tatuagem: { descricao: string; cliente: { nome: string } };
 };
 
 /** "2026-10" + 1 → "2026-11" */
@@ -25,48 +26,47 @@ function somarMeses(mes: string, n: number): string {
   return d.toISOString().slice(0, 7);
 }
 
-function centavos(valor: number) {
-  return Math.round(Number(valor) * 100);
-}
-
 export default async function FinanceiroPage({ searchParams }: PageProps<"/financeiro">) {
   const { mes: mesParam } = await searchParams;
   const mesAtual = hoje().slice(0, 7);
   const mes = typeof mesParam === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(mesParam) ? mesParam : mesAtual;
-  const de = encodeURIComponent(mes === mesAtual ? "/financeiro" : `/financeiro?mes=${mes}`);
 
   const supabase = await createClient();
   const [doMes, abertas] = await Promise.all([
     supabase
       .from("pagamentos")
       .select(
-        "id, tatuagem_id, valor, data, tipo, forma, observacoes, " +
-          "tatuagem:tatuagens!inner(id, descricao, cliente:clientes!inner(nome))",
+        "id, sessao_id, valor, data, tipo, forma, observacoes, " +
+          "sessao:sessoes!inner(id, tatuagem:tatuagens!inner(descricao, cliente:clientes!inner(nome)))",
       )
       .gte("data", `${mes}-01`)
       .lt("data", `${somarMeses(mes, 1)}-01`)
       .order("data", { ascending: false })
       .order("criado_em", { ascending: false }),
     supabase
-      .from("tatuagens")
-      .select("id, descricao, valor, cliente:clientes!inner(nome), pagamentos(valor)")
-      .not("valor", "is", null),
+      .from("sessoes")
+      .select(
+        "id, inicio, status, valor, pagamentos(valor), " +
+          "tatuagem:tatuagens!inner(descricao, cliente:clientes!inner(nome))",
+      )
+      .not("valor", "is", null)
+      .not("status", "in", "(cancelado,faltou)")
+      .order("inicio"),
   ]);
 
   const pagamentos = (doMes.data ?? []) as unknown as PagamentoDoMes[];
-  const recebido = pagamentos.reduce((s, p) => s + centavos(p.valor), 0) / 100;
-  const sinais = pagamentos.filter((p) => p.tipo === "sinal").reduce((s, p) => s + centavos(p.valor), 0) / 100;
+  const recebido = somar(pagamentos.map((p) => p.valor));
+  const sinais = somar(pagamentos.filter((p) => p.tipo === "sinal").map((p) => p.valor));
 
-  const aReceber = ((abertas.data ?? []) as unknown as TatuagemAReceber[])
-    .map((t) => ({ ...t, falta: saldo(t.valor, t.pagamentos).falta ?? 0 }))
-    .filter((t) => t.falta > 0)
-    .sort((a, b) => b.falta - a.falta);
-  const totalAReceber = aReceber.reduce((s, t) => s + centavos(t.falta), 0) / 100;
+  const aReceber = ((abertas.data ?? []) as unknown as SessaoAReceber[])
+    .map((s) => ({ ...s, falta: saldoSessao(s).falta ?? 0 }))
+    .filter((s) => s.falta > 0);
+  const totalAReceber = somar(aReceber.map((s) => s.falta));
 
   const porForma = Object.entries(FORMAS)
     .map(([forma, rotulo]) => ({
       rotulo,
-      total: pagamentos.filter((p) => p.forma === forma).reduce((s, p) => s + centavos(p.valor), 0) / 100,
+      total: somar(pagamentos.filter((p) => p.forma === forma).map((p) => p.valor)),
     }))
     .filter((f) => f.total > 0);
 
@@ -119,7 +119,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
             <p className="text-xl font-semibold tabular-nums text-amber-700 dark:text-amber-400">
               {reais(totalAReceber)}
             </p>
-            <p className="mt-1 text-xs text-muted">de todas as tatuagens</p>
+            <p className="mt-1 text-xs text-muted">de todas as sessões</p>
           </div>
         </div>
 
@@ -143,11 +143,11 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
             {pagamentos.map((p) => (
               <li key={p.id}>
                 <Link
-                  href={`/tatuagens/${p.tatuagem.id}/financeiro?de=${de}`}
+                  href={`/agenda/${p.sessao.id}`}
                   className="flex items-center gap-3 px-4 py-3 active:bg-background"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{p.tatuagem.cliente.nome}</span>
+                    <span className="block truncate font-medium">{p.sessao.tatuagem.cliente.nome}</span>
                     <span className="block truncate text-sm text-muted">
                       {formatarData(p.data)} · {TIPOS[p.tipo]} · {FORMAS[p.forma]}
                     </span>
@@ -164,21 +164,23 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
           <div className="card py-8 text-center text-sm text-muted">Nada pendente.</div>
         ) : (
           <ul className="card divide-y divide-border p-0">
-            {aReceber.map((t) => (
-              <li key={t.id}>
+            {aReceber.map((s) => (
+              <li key={s.id}>
                 <Link
-                  href={`/tatuagens/${t.id}/financeiro?de=${de}`}
+                  href={`/agenda/${s.id}`}
                   className="flex items-center gap-3 px-4 py-3 active:bg-background"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{t.cliente.nome}</span>
-                    <span className="block truncate text-sm text-muted">{t.descricao}</span>
+                    <span className="block truncate font-medium">{s.tatuagem.cliente.nome}</span>
+                    <span className="block truncate text-sm text-muted">
+                      {formatarData(partesLocais(s.inicio).data)} · {s.tatuagem.descricao}
+                    </span>
                   </span>
                   <span className="text-right">
                     <span className="block font-semibold tabular-nums text-amber-700 dark:text-amber-400">
-                      {reais(t.falta)}
+                      {reais(s.falta)}
                     </span>
-                    <span className="block text-xs text-muted tabular-nums">de {reais(Number(t.valor))}</span>
+                    <span className="block text-xs text-muted tabular-nums">de {reais(Number(s.valor))}</span>
                   </span>
                 </Link>
               </li>

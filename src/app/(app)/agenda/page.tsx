@@ -13,6 +13,7 @@ import {
   partesLocais,
   somarDias,
 } from "@/lib/agenda";
+import { reais, saldoSessao } from "@/lib/financeiro";
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
@@ -149,10 +150,13 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
                 <span className="truncate font-medium">{s.tatuagem.cliente.nome}</span>
                 <span className="truncate text-sm text-muted">{s.tatuagem.descricao}</span>
               </span>
-              <span
-                className={`self-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[s.status].cor}`}
-              >
-                {STATUS[s.status].rotulo}
+              <span className="flex shrink-0 flex-col items-end justify-center gap-1">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[s.status].cor}`}
+                >
+                  {STATUS[s.status].rotulo}
+                </span>
+                <ValorDaSessao sessao={s} />
               </span>
             </Link>
           </li>
@@ -171,5 +175,19 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
 
       <BotaoFlutuante href={`/agenda/nova?data=${dia}`} rotulo="Nova sessão" />
     </>
+  );
+}
+
+/** Valor da sessão: âmbar enquanto falta receber, verde quando quitado. */
+function ValorDaSessao({ sessao }: { sessao: SessaoCompleta }) {
+  if (sessao.valor === null) return <span className="text-xs text-muted">Sem valor</span>;
+  const { pago, falta } = saldoSessao(sessao);
+  return (
+    <span
+      className={`text-xs font-medium tabular-nums ${falta ? "text-amber-700 dark:text-amber-400" : "text-green-700 dark:text-green-400"}`}
+      title={falta ? `${reais(pago)} pago · falta ${reais(falta)}` : "Quitado"}
+    >
+      {reais(Number(sessao.valor))}
+    </span>
   );
 }

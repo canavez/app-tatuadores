@@ -27,6 +27,7 @@ export type Sessao = {
   fim: string;
   status: StatusSessao;
   observacoes: string | null;
+  valor: number | null;
 };
 
 export type Tatuagem = {

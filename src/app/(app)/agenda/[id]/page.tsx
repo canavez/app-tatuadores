@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Pencil, Wallet } from "lucide-react";
+import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Pencil, Plus, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { reais, saldo } from "@/lib/financeiro";
+import { FORMAS, TIPOS, reais, saldoSessao } from "@/lib/financeiro";
+import { formatarData } from "@/lib/clientes";
 import { STATUS, linkLembrete, nomeDoDia, partesLocais, type StatusSessao } from "@/lib/agenda";
 import { Avatar } from "@/components/avatar";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { BotaoIcone, Topo } from "@/components/topo";
 import { ResumoAnamnese } from "@/components/resumo-anamnese";
-import { excluirSessao, mudarStatus } from "../actions";
+import { excluirPagamento, excluirSessao, mudarStatus } from "../actions";
 import { buscarSessao } from "../dados";
 import { buscarAnamnese } from "../../clientes/[id]/buscar-cliente";
 
@@ -35,19 +36,12 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
   const { cliente } = sessao.tatuagem;
   const inicio = partesLocais(sessao.inicio);
   const supabase = await createClient();
-  const [anamnese, { data: termo }, { data: financeiro }] = await Promise.all([
+  const [anamnese, { data: termo }] = await Promise.all([
     buscarAnamnese(cliente.id),
     supabase.from("termos").select("id").eq("tatuagem_id", sessao.tatuagem_id).maybeSingle(),
-    supabase
-      .from("tatuagens")
-      .select("valor, pagamentos(valor)")
-      .eq("id", sessao.tatuagem_id)
-      .maybeSingle(),
   ]);
   const ativa = sessao.status === "agendado" || sessao.status === "confirmado";
-  const valor = financeiro?.valor ?? null;
-  const { pago, falta } = saldo(valor, financeiro?.pagamentos ?? []);
-  const deSessao = encodeURIComponent(`/agenda/${sessao.id}`);
+  const { pago, falta } = saldoSessao(sessao);
 
   return (
     <>
@@ -99,25 +93,6 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
             </p>
           </div>
           <Link
-            href={`/tatuagens/${sessao.tatuagem_id}/financeiro?de=${deSessao}`}
-            className="flex items-center gap-3 px-4 py-3 active:bg-background"
-          >
-            <Wallet className="size-5 text-muted" />
-            <span className="flex-1">
-              <span className="block text-sm">Financeiro</span>
-              <span className="block text-xs text-muted tabular-nums">
-                {valor === null
-                  ? pago > 0
-                    ? `${reais(pago)} pago · valor não definido`
-                    : "Valor não definido — toque para informar"
-                  : falta
-                    ? `${reais(pago)} pago de ${reais(Number(valor))} · falta ${reais(falta)}`
-                    : `${reais(Number(valor))} · quitado`}
-              </span>
-            </span>
-            <ChevronRight className="size-4 text-muted" />
-          </Link>
-          <Link
             href={`/tatuagens/${sessao.tatuagem_id}/termo?de=/agenda/${sessao.id}`}
             className="flex items-center gap-3 px-4 py-3 active:bg-background"
           >
@@ -146,6 +121,61 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
 
         <ResumoAnamnese clienteId={cliente.id} anamnese={anamnese} />
 
+        <section className="card flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Wallet className="size-5 text-muted" />
+            <h2 className="flex-1 font-medium">Pagamento</h2>
+            {sessao.valor !== null && (
+              <span className="font-semibold tabular-nums">{reais(Number(sessao.valor))}</span>
+            )}
+          </div>
+
+          {sessao.valor === null ? (
+            <p className="text-sm text-muted">
+              Valor da sessão não definido.{" "}
+              <Link href={`/agenda/${sessao.id}/editar`} className="font-medium text-foreground underline">
+                Informar valor
+              </Link>
+            </p>
+          ) : (
+            <p className="text-sm tabular-nums">
+              <span className="text-green-700 dark:text-green-400">{reais(pago)} pago</span>
+              {falta ? (
+                <span className="text-amber-700 dark:text-amber-400"> · falta {reais(falta)}</span>
+              ) : (
+                Number(sessao.valor) > 0 && <span className="text-muted"> · quitado</span>
+              )}
+            </p>
+          )}
+
+          {sessao.pagamentos.length > 0 && (
+            <ul className="divide-y divide-border border-t border-border">
+              {sessao.pagamentos.map((p) => (
+                <li key={p.id} className="flex items-center gap-3 py-2 text-sm">
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium tabular-nums">{reais(Number(p.valor))}</span>
+                    <span className="text-muted">
+                      {" "}
+                      · {TIPOS[p.tipo]} · {FORMAS[p.forma]} · {formatarData(p.data)}
+                    </span>
+                    {p.observacoes && <span className="block text-muted">{p.observacoes}</span>}
+                  </span>
+                  <BotaoExcluir
+                    acao={excluirPagamento.bind(null, p.id, sessao.id)}
+                    rotulo="Excluir"
+                    confirmacao={`Excluir o pagamento de ${reais(Number(p.valor))}?`}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Link href={`/agenda/${sessao.id}/pagamento`} className="botao-secundario gap-2 py-3 sm:py-2">
+            <Plus className="size-4" />
+            {sessao.status === "agendado" ? "Registrar sinal" : "Registrar pagamento"}
+          </Link>
+        </section>
+
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {ACOES[sessao.status].map((novo) => (
             <form key={novo} action={mudarStatus.bind(null, sessao.id, novo)} className="contents">
@@ -157,15 +187,6 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
               </button>
             </form>
           ))}
-          {sessao.status === "agendado" && (
-            <Link
-              href={`/tatuagens/${sessao.tatuagem_id}/pagamentos/novo?tipo=sinal&sessao=${sessao.id}&de=${deSessao}`}
-              className="botao-secundario gap-2 py-3 sm:py-2"
-            >
-              <Wallet className="size-4" />
-              Registrar sinal
-            </Link>
-          )}
           {cliente.telefone && ativa && (
             <a
               href={linkLembrete(cliente.telefone, cliente.nome, sessao.inicio)}

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dataValida, ehStatus, paraInstante, type StatusSessao } from "@/lib/agenda";
-import { lerReais } from "@/lib/financeiro";
+import { ehForma, ehTipo, lerReais } from "@/lib/financeiro";
 
 export type EstadoForm = { erro?: string } | undefined;
 
@@ -40,7 +40,7 @@ export async function salvarSessao(
   if (tatuagemId === "nova" && !texto(formData, "descricao")) {
     return { erro: "Descreva a nova tatuagem." };
   }
-  const valorDigitado = tatuagemId === "nova" ? texto(formData, "valor") : null;
+  const valorDigitado = texto(formData, "valor");
   const valor = lerReais(valorDigitado);
   if (valorDigitado && valor === null) return { erro: "Valor inválido. Ex.: 1500 ou 1.500,00" };
 
@@ -67,7 +67,6 @@ export async function salvarSessao(
         cliente_id: clienteId,
         descricao: texto(formData, "descricao"),
         local_corpo: texto(formData, "local_corpo"),
-        valor,
       })
       .select("id")
       .single();
@@ -83,6 +82,7 @@ export async function salvarSessao(
     inicio: paraInstante(data, horaInicio),
     fim: paraInstante(data, horaFim),
     status,
+    valor,
     observacoes: texto(formData, "observacoes"),
   };
 
@@ -120,4 +120,46 @@ export async function excluirSessao(id: string) {
   await supabase.from("sessoes").delete().eq("id", id);
   revalidatePath("/agenda");
   redirect("/agenda");
+}
+
+export async function registrarPagamento(
+  sessaoId: string,
+  _: EstadoForm,
+  formData: FormData,
+): Promise<EstadoForm> {
+  const valor = lerReais(texto(formData, "valor"));
+  const data = texto(formData, "data");
+  const tipo = formData.get("tipo");
+  const forma = formData.get("forma");
+
+  if (!valor || valor <= 0) return { erro: "Informe o valor recebido. Ex.: 200 ou 200,00" };
+  if (!dataValida(data)) return { erro: "Informe a data do pagamento." };
+  if (!ehTipo(tipo)) return { erro: "Escolha se é sinal ou pagamento." };
+  if (!ehForma(forma)) return { erro: "Escolha a forma de pagamento." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("pagamentos").insert({
+    sessao_id: sessaoId,
+    valor,
+    data,
+    tipo,
+    forma,
+    observacoes: texto(formData, "observacoes"),
+  });
+  if (error) return { erro: "Não foi possível registrar o pagamento. Tente novamente." };
+
+  // Sinal recebido confirma a sessão que estava aguardando sinal.
+  if (tipo === "sinal") {
+    await supabase.from("sessoes").update({ status: "confirmado" }).eq("id", sessaoId).eq("status", "agendado");
+  }
+
+  revalidatePath("/", "layout");
+  redirect(`/agenda/${sessaoId}`);
+}
+
+export async function excluirPagamento(id: string, sessaoId: string) {
+  const supabase = await createClient();
+  await supabase.from("pagamentos").delete().eq("id", id);
+  revalidatePath("/", "layout");
+  redirect(`/agenda/${sessaoId}`);
 }

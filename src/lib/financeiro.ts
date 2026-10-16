@@ -16,7 +16,7 @@ export type TipoPagamento = keyof typeof TIPOS;
 
 export type Pagamento = {
   id: string;
-  tatuagem_id: string;
+  sessao_id: string;
   valor: number;
   data: string;
   tipo: TipoPagamento;
@@ -57,12 +57,26 @@ export function reaisParaCampo(valor: number | null): string {
   return valor === null ? "" : valor.toFixed(2).replace(".", ",");
 }
 
-/** Quanto já foi pago e quanto falta de uma tatuagem. */
-export function saldo(valor: number | null, pagamentos: { valor: number }[]) {
-  // Soma em centavos para não acumular erro de arredondamento.
-  const pago = pagamentos.reduce((soma, p) => soma + Math.round(Number(p.valor) * 100), 0) / 100;
+/** Soma valores em reais sem acumular erro de arredondamento (soma em centavos). */
+export function somar(valores: (number | null)[]): number {
+  return valores.reduce<number>((soma, v) => soma + Math.round(Number(v ?? 0) * 100), 0) / 100;
+}
+
+/**
+ * Quanto já foi pago e quanto falta de uma sessão.
+ * Sessão cancelada ou em que o cliente faltou não tem nada a receber
+ * (o que foi pago, como o sinal, continua contando como recebido).
+ */
+export function saldoSessao(sessao: {
+  valor: number | null;
+  status: string;
+  pagamentos: { valor: number }[];
+}) {
+  const pago = somar(sessao.pagamentos.map((p) => p.valor));
+  const conta = sessao.status !== "cancelado" && sessao.status !== "faltou";
   return {
     pago,
-    falta: valor === null ? null : Math.max(Math.round((Number(valor) - pago) * 100) / 100, 0),
+    falta:
+      sessao.valor === null ? null : conta ? Math.max(somar([sessao.valor, -pago]), 0) : 0,
   };
 }

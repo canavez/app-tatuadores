@@ -3,13 +3,10 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { FORMAS, TIPOS, type TipoPagamento } from "@/lib/financeiro";
-import { registrarPagamento } from "../../financeiro/actions";
+import { registrarPagamento } from "../../actions";
 
 type Props = {
-  tatuagemId: string;
-  de: string | null;
-  sessaoId: string | null;
-  voltar: string;
+  sessaoId: string;
   hoje: string;
   tipoInicial: TipoPagamento;
   valorSugerido: string;
@@ -46,16 +43,13 @@ function Opcoes({
 }
 
 export function PagamentoForm({
-  tatuagemId,
-  de,
   sessaoId,
-  voltar,
   hoje,
   tipoInicial,
   valorSugerido,
 }: Props) {
   const [estado, acao, pendente] = useActionState(
-    registrarPagamento.bind(null, tatuagemId, de, sessaoId),
+    registrarPagamento.bind(null, sessaoId),
     undefined,
   );
 
@@ -97,7 +91,7 @@ export function PagamentoForm({
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
 
       <div className="flex justify-end gap-3">
-        <Link href={voltar} className="botao-secundario">
+        <Link href={`/agenda/${sessaoId}`} className="botao-secundario">
           Cancelar
         </Link>
         <button type="submit" className="botao" disabled={pendente}>
