@@ -5,7 +5,9 @@ async function salvarTaxas(
   page: Page,
   taxas: { credito: string; comissao?: string; contasFixas?: string },
 ) {
-  await page.goto("/conta");
+  await page.goto("/financeiro");
+  await page.getByRole("link", { name: "Taxas e custos" }).first().click();
+  await expect(page.getByRole("heading", { name: "Taxas e custos" })).toBeVisible();
   await page.getByLabel("Crédito").fill(taxas.credito);
   if (taxas.contasFixas !== undefined) {
     await page.getByText("Estúdio próprio", { exact: true }).click();
@@ -20,9 +22,9 @@ async function salvarTaxas(
 test.afterEach(async ({ page }) => {
   // Zera as taxas para não afetar os outros testes.
   await salvarTaxas(page, { credito: "", contasFixas: "" });
-  await expect(page.getByText("Configurações salvas.")).toBeVisible();
+  await expect(page).toHaveURL(/\/financeiro$/);
   await salvarTaxas(page, { credito: "", comissao: "" });
-  await expect(page.getByText("Configurações salvas.")).toBeVisible();
+  await expect(page).toHaveURL(/\/financeiro$/);
 });
 
 test("taxa da maquininha fica no pagamento e entra no resultado com comissão e despesas", async ({
@@ -33,7 +35,7 @@ test("taxa da maquininha fica no pagamento e entra no resultado com comissão e 
 
   await page.getByLabel("Crédito").fill("5");
   await page.getByRole("button", { name: "Salvar", exact: true }).click();
-  await expect(page.getByText("Configurações salvas.")).toBeVisible();
+  await expect(page).toHaveURL(/\/financeiro$/);
 
   const cliente = nomeUnico("Sara");
   await criarCliente(page, cliente);
@@ -67,7 +69,7 @@ test("taxa da maquininha fica no pagamento e entra no resultado com comissão e 
 
   // Estúdio próprio: no lugar da comissão entram as contas fixas.
   await salvarTaxas(page, { credito: "5", contasFixas: "1.800" });
-  await expect(page.getByText("Configurações salvas.")).toBeVisible();
+  await expect(page).toHaveURL(/\/financeiro$/);
   await page.goto("/financeiro");
   await expect(resultado.getByText("Contas fixas")).toBeVisible();
   await expect(resultado.getByText("− R$ 1.800,00")).toBeVisible();

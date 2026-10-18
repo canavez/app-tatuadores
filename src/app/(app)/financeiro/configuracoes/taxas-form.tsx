@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { semLimpar } from "@/lib/formulario";
 import { percentualParaCampo, reaisParaCampo, type Configuracoes } from "@/lib/financeiro";
-import { salvarTaxas } from "./actions";
+import { salvarTaxas } from "../actions";
 
 const CAMPOS = [
   { campo: "taxa_debito", rotulo: "Débito" },
@@ -21,12 +22,9 @@ export function TaxasForm({ config }: { config: Configuracoes }) {
 
   return (
     <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
-      <div>
-        <h2 className="font-semibold">Taxas e custos</h2>
-        <p className="text-xs text-muted">
-          Usados para calcular o lucro do mês. Deixe em branco o que não se aplica.
-        </p>
-      </div>
+      <p className="text-sm text-muted">
+        Usados para calcular o lucro do mês. Deixe em branco o que não se aplica.
+      </p>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">Taxa da maquininha (%)</legend>
@@ -94,10 +92,14 @@ export function TaxasForm({ config }: { config: Configuracoes }) {
       </label>
 
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
-      {estado?.mensagem && <p className="aviso-ok">{estado.mensagem}</p>}
-      <button type="submit" className="botao self-end" disabled={pendente}>
-        {pendente ? "Salvando..." : "Salvar"}
-      </button>
+      <div className="flex justify-end gap-3">
+        <Link href="/financeiro" className="botao-secundario">
+          Cancelar
+        </Link>
+        <button type="submit" className="botao" disabled={pendente}>
+          {pendente ? "Salvando..." : "Salvar"}
+        </button>
+      </div>
     </form>
   );
 }

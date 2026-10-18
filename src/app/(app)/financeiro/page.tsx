@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { hoje, mesAno, partesLocais } from "@/lib/agenda";
 import { formatarData } from "@/lib/clientes";
@@ -16,7 +16,7 @@ import {
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { excluirDespesa } from "./actions";
-import { Topo } from "@/components/topo";
+import { BotaoIcone, Topo } from "@/components/topo";
 
 type PagamentoDoMes = Pagamento & {
   sessao: { id: string; tatuagem: { descricao: string; cliente: { nome: string } } };
@@ -114,11 +114,16 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
       <Topo
         titulo="Financeiro"
         acoes={
-          mes !== mesAtual && (
-            <Link href="/financeiro" className="botao-secundario py-1.5">
-              Mês atual
-            </Link>
-          )
+          <>
+            {mes !== mesAtual && (
+              <Link href="/financeiro" className="botao-secundario py-1.5">
+                Mês atual
+              </Link>
+            )}
+            <BotaoIcone href="/financeiro/configuracoes" rotulo="Taxas e custos">
+              <Settings className="size-5" />
+            </BotaoIcone>
+          </>
         }
       />
 
@@ -194,8 +199,8 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
           {semConfiguracao && (
             <p className="text-xs text-muted">
               Configure as taxas da maquininha e os custos do estúdio em{" "}
-              <Link href="/conta" className="underline">
-                Conta
+              <Link href="/financeiro/configuracoes" className="underline">
+                Taxas e custos
               </Link>
               .
             </p>
