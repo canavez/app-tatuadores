@@ -111,3 +111,6 @@ export const CATALOGO: { categoria: CategoriaEstoque; itens: string[] }[] = [
     ],
   },
 ];
+
+/** Categorias que podem ser registradas como "materiais usados" numa sessão. */
+export const CATEGORIAS_DA_SESSAO: CategoriaEstoque[] = ["cartuchos", "agulhas", "biqueiras"];

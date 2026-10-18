@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Pencil, Plus, Wallet } from "lucide-react";
+import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Package, Pencil, Plus, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { FORMAS, TIPOS, reais, saldoSessao, somar } from "@/lib/financeiro";
 import { formatarData } from "@/lib/clientes";
@@ -36,10 +36,15 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
   const { cliente } = sessao.tatuagem;
   const inicio = partesLocais(sessao.inicio);
   const supabase = await createClient();
-  const [anamnese, { data: termo }] = await Promise.all([
+  const [anamnese, { data: termo }, { data: materiais }] = await Promise.all([
     buscarAnamnese(cliente.id),
     supabase.from("termos").select("id").eq("tatuagem_id", sessao.tatuagem_id).maybeSingle(),
+    supabase
+      .from("sessao_materiais")
+      .select("quantidade, item:itens_estoque!inner(nome)")
+      .eq("sessao_id", sessao.id),
   ]);
+  const usados = (materiais ?? []) as unknown as { quantidade: number; item: { nome: string } }[];
   const ativa = sessao.status === "agendado" || sessao.status === "confirmado";
   const { pago, falta } = saldoSessao(sessao);
 
@@ -182,8 +187,29 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
           </Link>
         </section>
 
+        <section className="card flex flex-col gap-3" aria-label="Materiais usados">
+          <div className="flex items-center gap-2">
+            <Package className="size-5 text-muted" />
+            <h2 className="flex-1 font-medium">Materiais usados</h2>
+            <Link href={`/agenda/${sessao.id}/materiais`} className="text-sm font-medium underline">
+              {usados.length > 0 ? "Editar" : "Registrar"}
+            </Link>
+          </div>
+          <p className="text-sm text-muted">
+            {usados.length > 0
+              ? usados.map((m) => `${m.quantidade} × ${m.item.nome}`).join(" · ")
+              : "Cartuchos, agulhas e biqueiras usados nesta sessão saem do estoque."}
+          </p>
+        </section>
+
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          {ACOES[sessao.status].map((novo) => (
+          {ACOES[sessao.status].map((novo) =>
+            // Concluir passa antes pela tela de materiais usados (dá para pular).
+            novo === "realizado" ? (
+              <Link key={novo} href={`/agenda/${sessao.id}/materiais?realizar=1`} className="botao py-3 sm:py-2">
+                {ROTULO_ACAO[novo]}
+              </Link>
+            ) : (
             <form key={novo} action={mudarStatus.bind(null, sessao.id, novo)} className="contents">
               <button
                 type="submit"
@@ -192,7 +218,8 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
                 {ROTULO_ACAO[novo]}
               </button>
             </form>
-          ))}
+            ),
+          )}
           {cliente.telefone && ativa && (
             <a
               href={linkLembrete(cliente.telefone, cliente.nome, sessao.inicio)}

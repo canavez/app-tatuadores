@@ -167,3 +167,53 @@ export async function excluirPagamento(id: string, sessaoId: string) {
   revalidatePath("/", "layout");
   redirect(`/agenda/${sessaoId}`);
 }
+
+/**
+ * Salva os materiais usados na sessão (campos "q_<id do item>").
+ * O estoque é ajustado pelo banco. Com `realizar`, também marca a sessão como realizada.
+ */
+export async function salvarMateriais(
+  sessaoId: string,
+  realizar: boolean,
+  _: EstadoForm,
+  formData: FormData,
+): Promise<EstadoForm> {
+  const quantidades = new Map<string, number>();
+  for (const [campo, valor] of formData.entries()) {
+    if (!campo.startsWith("q_")) continue;
+    const n = Number(valor);
+    if (!Number.isInteger(n) || n < 0 || n > 999) return { erro: "Quantidade inválida." };
+    quantidades.set(campo.slice(2), n);
+  }
+
+  const supabase = await createClient();
+  const { data: atuais } = await supabase
+    .from("sessao_materiais")
+    .select("item_id")
+    .eq("sessao_id", sessaoId);
+  const jaRegistrados = new Set((atuais ?? []).map((m) => m.item_id as string));
+
+  const usados = [...quantidades].filter(([, n]) => n > 0);
+  const zerados = [...quantidades].filter(([id, n]) => n === 0 && jaRegistrados.has(id)).map(([id]) => id);
+
+  if (usados.length > 0) {
+    const { error } = await supabase
+      .from("sessao_materiais")
+      .upsert(usados.map(([item_id, quantidade]) => ({ sessao_id: sessaoId, item_id, quantidade })));
+    if (error) return { erro: "Não foi possível salvar os materiais. Tente novamente." };
+  }
+  if (zerados.length > 0) {
+    await supabase.from("sessao_materiais").delete().eq("sessao_id", sessaoId).in("item_id", zerados);
+  }
+
+  if (realizar) {
+    await supabase
+      .from("sessoes")
+      .update({ status: "realizado" })
+      .eq("id", sessaoId)
+      .in("status", ["agendado", "confirmado"]);
+  }
+
+  revalidatePath("/", "layout");
+  redirect(`/agenda/${sessaoId}`);
+}
