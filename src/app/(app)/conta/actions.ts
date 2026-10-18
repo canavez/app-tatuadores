@@ -19,7 +19,7 @@ export async function salvarNome(_: EstadoConta, formData: FormData): Promise<Es
 }
 
 export async function salvarTaxas(_: EstadoConta, formData: FormData): Promise<EstadoConta> {
-  const campos = ["taxa_debito", "taxa_credito", "taxa_pix", "comissao_estudio"] as const;
+  const campos = ["taxa_debito", "taxa_credito", "comissao_estudio"] as const;
   const valores: Record<string, number> = {};
   for (const campo of campos) {
     const valor = lerPercentual(String(formData.get(campo) ?? "").trim() || null);
@@ -35,6 +35,7 @@ export async function salvarTaxas(_: EstadoConta, formData: FormData): Promise<E
   const supabase = await createClient();
   const { error } = await supabase.from("configuracoes").upsert({
     ...valores,
+    taxa_pix: 0, // Pix não tem taxa.
     modelo,
     contas_fixas: contasFixas,
     atualizado_em: new Date().toISOString(),

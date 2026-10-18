@@ -133,13 +133,8 @@ export function percentualParaCampo(valor: number): string {
 
 /** Taxa da maquininha, em reais, de um pagamento com essa forma e valor. */
 export function taxaDoPagamento(config: Configuracoes, forma: Forma, valor: number): number {
+  // Só cartão tem taxa (Pix, dinheiro e outros não).
   const percentual =
-    forma === "debito"
-      ? config.taxa_debito
-      : forma === "credito"
-        ? config.taxa_credito
-        : forma === "pix"
-          ? config.taxa_pix
-          : 0;
+    forma === "debito" ? config.taxa_debito : forma === "credito" ? config.taxa_credito : 0;
   return Math.round(valor * Number(percentual)) / 100;
 }

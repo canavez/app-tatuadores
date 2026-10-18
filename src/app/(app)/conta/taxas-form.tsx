@@ -8,7 +8,6 @@ import { salvarTaxas } from "./actions";
 const CAMPOS = [
   { campo: "taxa_debito", rotulo: "Débito" },
   { campo: "taxa_credito", rotulo: "Crédito" },
-  { campo: "taxa_pix", rotulo: "Pix" },
 ] as const;
 
 const MODELOS = [
@@ -31,7 +30,7 @@ export function TaxasForm({ config }: { config: Configuracoes }) {
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">Taxa da maquininha (%)</legend>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {CAMPOS.map(({ campo, rotulo }) => (
             <label key={campo} className="campo">
               {rotulo}
