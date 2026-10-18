@@ -4,7 +4,7 @@ test.describe("sem login", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test("telas protegidas mandam para o login", async ({ page }) => {
-    for (const rota of ["/", "/agenda", "/clientes", "/clientes/novo"]) {
+    for (const rota of ["/", "/hoje", "/agenda", "/clientes", "/clientes/novo"]) {
       await page.goto(rota);
       await expect(page).toHaveURL(/\/login$/);
     }
@@ -28,10 +28,10 @@ test.describe("sem login", () => {
   });
 });
 
-test("logado, /login volta para a agenda", async ({ page }) => {
+test("logado, /login volta para a tela Hoje", async ({ page }) => {
   await page.goto("/login");
-  await expect(page).toHaveURL(/\/agenda$/);
-  await expect(page.getByRole("link", { name: "Agenda" }).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/hoje$/);
+  await expect(page.getByRole("link", { name: "Hoje" }).first()).toBeVisible();
 });
 
 test("Sair desloga só este aparelho", async ({ page, browser }) => {
@@ -42,7 +42,7 @@ test("Sair desloga só este aparelho", async ({ page, browser }) => {
   await pagina.getByLabel("E-mail").fill(process.env.TESTE_EMAIL!);
   await pagina.getByLabel("Senha").fill(process.env.TESTE_SENHA!);
   await pagina.getByRole("button", { name: "Entrar" }).click();
-  await expect(pagina).toHaveURL(/\/agenda$/);
+  await expect(pagina).toHaveURL(/\/hoje$/);
 
   await pagina.goto("/conta");
   await pagina.getByRole("button", { name: "Sair" }).click();

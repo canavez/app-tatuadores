@@ -6,6 +6,6 @@ setup("entrar com a conta de teste", async ({ page }) => {
   await page.getByLabel("E-mail").fill(process.env.TESTE_EMAIL!);
   await page.getByLabel("Senha").fill(process.env.TESTE_SENHA!);
   await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page).toHaveURL(/\/agenda$/);
+  await expect(page).toHaveURL(/\/hoje$/);
   await page.context().storageState({ path: "playwright/.auth/usuario.json" });
 });

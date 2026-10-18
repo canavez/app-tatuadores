@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, UserRound, Users, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarDays, Sun, UserRound, Users, Wallet, type LucideIcon } from "lucide-react";
 
 const ABAS: { href: string; rotulo: string; Icone: LucideIcon }[] = [
+  { href: "/hoje", rotulo: "Hoje", Icone: Sun },
   { href: "/agenda", rotulo: "Agenda", Icone: CalendarDays },
   { href: "/clientes", rotulo: "Clientes", Icone: Users },
   { href: "/financeiro", rotulo: "Financeiro", Icone: Wallet },
@@ -24,7 +25,7 @@ export function MenuInferior() {
       aria-label="Menu principal"
       className="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-border bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4">
+      <ul className="mx-auto grid max-w-md grid-cols-5">
         {ABAS.map(({ href, rotulo, Icone }) => (
           <li key={href}>
             <Link
@@ -50,7 +51,7 @@ export function MenuSuperior() {
   return (
     <header className="sticky top-0 z-30 hidden print:hidden border-b border-border bg-surface/90 backdrop-blur md:block">
       <div className="mx-auto flex max-w-3xl items-center gap-8 px-6 py-3">
-        <Link href="/agenda" className="flex items-center gap-2 font-bold tracking-tight">
+        <Link href="/hoje" className="flex items-center gap-2 font-bold tracking-tight">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icone-192.png" alt="" className="size-7 rounded-lg" />
           Ravenn

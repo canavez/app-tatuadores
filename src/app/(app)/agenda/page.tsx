@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
-  STATUS,
   dataValida,
   diaDaSemanaCurto,
   hoje,
@@ -13,19 +12,10 @@ import {
   partesLocais,
   somarDias,
 } from "@/lib/agenda";
-import { reais, saldoSessao } from "@/lib/financeiro";
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
+import { CardSessao } from "@/components/card-sessao";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
-
-// Cor da barrinha lateral de cada sessão, conforme o status.
-const BARRA: Record<keyof typeof STATUS, string> = {
-  agendado: "bg-amber-500",
-  confirmado: "bg-blue-500",
-  realizado: "bg-green-500",
-  faltou: "bg-red-500",
-  cancelado: "bg-zinc-400",
-};
 
 export default async function AgendaPage({ searchParams }: PageProps<"/agenda">) {
   const { dia: diaParam } = await searchParams;
@@ -135,30 +125,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
       <ul className="flex flex-col gap-2">
         {doDia.map((s) => (
           <li key={s.id}>
-            <Link
-              href={`/agenda/${s.id}`}
-              className={`card flex items-stretch gap-3 p-3 transition active:scale-[0.99] ${
-                s.status === "cancelado" ? "opacity-60" : ""
-              }`}
-            >
-              <span className={`w-1 shrink-0 rounded-full ${BARRA[s.status]}`} />
-              <span className="flex w-12 shrink-0 flex-col justify-center font-mono text-sm tabular-nums">
-                <span className="font-semibold">{partesLocais(s.inicio).hora}</span>
-                <span className="text-muted">{partesLocais(s.fim).hora}</span>
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col justify-center">
-                <span className="truncate font-medium">{s.tatuagem.cliente.nome}</span>
-                <span className="truncate text-sm text-muted">{s.tatuagem.descricao}</span>
-              </span>
-              <span className="flex shrink-0 flex-col items-end justify-center gap-1">
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[s.status].cor}`}
-                >
-                  {STATUS[s.status].rotulo}
-                </span>
-                <ValorDaSessao sessao={s} />
-              </span>
-            </Link>
+            <CardSessao sessao={s} />
           </li>
         ))}
       </ul>
@@ -175,19 +142,5 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
 
       <BotaoFlutuante href={`/agenda/nova?data=${dia}`} rotulo="Nova sessão" />
     </>
-  );
-}
-
-/** Valor da sessão: âmbar enquanto falta receber, verde quando quitado. */
-function ValorDaSessao({ sessao }: { sessao: SessaoCompleta }) {
-  if (sessao.valor === null) return <span className="text-xs text-muted">Sem valor</span>;
-  const { pago, falta } = saldoSessao(sessao);
-  return (
-    <span
-      className={`text-xs font-medium tabular-nums ${falta ? "text-amber-700 dark:text-amber-400" : "text-green-700 dark:text-green-400"}`}
-      title={falta ? `${reais(pago)} pago · falta ${reais(falta)}` : "Quitado"}
-    >
-      {reais(Number(sessao.valor))}
-    </span>
   );
 }
