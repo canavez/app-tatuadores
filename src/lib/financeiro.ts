@@ -101,14 +101,20 @@ export type Configuracoes = {
   taxa_debito: number;
   taxa_credito: number;
   taxa_pix: number;
+  /** "comissao": trabalha em estúdio de outra pessoa; "proprio": estúdio próprio. */
+  modelo: "comissao" | "proprio";
   comissao_estudio: number;
+  /** Soma das contas fixas do mês (aluguel, água, luz, internet...), em reais. */
+  contas_fixas: number;
 };
 
 export const SEM_CONFIGURACAO: Configuracoes = {
   taxa_debito: 0,
   taxa_credito: 0,
   taxa_pix: 0,
+  modelo: "comissao",
   comissao_estudio: 0,
+  contas_fixas: 0,
 };
 
 /** Lê um percentual digitado ("3,5", "3.5", "3,5%"). Vazio vale 0; inválido devolve null. */

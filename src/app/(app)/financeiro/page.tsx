@@ -80,13 +80,20 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
   const recebido = somar(pagamentos.map((p) => p.valor));
   const sinais = somar(pagamentos.filter((p) => p.tipo === "sinal").map((p) => p.valor));
   const taxas = somar(pagamentos.map((p) => p.taxa));
-  const comissao = Math.round(recebido * Number(config.comissao_estudio)) / 100;
+  const proprio = config.modelo === "proprio";
+  // Estúdio de outra pessoa: comissão sobre o recebido. Estúdio próprio: contas fixas do mês.
+  const custoEstudio = proprio
+    ? Number(config.contas_fixas)
+    : Math.round(recebido * Number(config.comissao_estudio)) / 100;
   const despesas = (despesasDoMes.data ?? []) as Despesa[];
   const totalDespesas = somar(despesas.map((d) => d.valor));
-  const lucro = somar([recebido, -taxas, -comissao, -totalDespesas]);
+  const lucro = somar([recebido, -taxas, -custoEstudio, -totalDespesas]);
   const percentualComissao = String(Number(config.comissao_estudio)).replace(".", ",");
   const semConfiguracao =
-    Number(config.taxa_credito) + Number(config.taxa_debito) + Number(config.comissao_estudio) === 0;
+    Number(config.taxa_credito) +
+      Number(config.taxa_debito) +
+      Number(proprio ? config.contas_fixas : config.comissao_estudio) ===
+    0;
 
   const aReceber = ((abertas.data ?? []) as unknown as SessaoAReceber[])
     .map((s) => ({ ...s, falta: saldoSessao(s).falta ?? 0 }))
@@ -168,8 +175,12 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
           <Linha rotulo="Recebido" valor={recebido} />
           <Linha rotulo="Taxas da maquininha" valor={-taxas} />
           <Linha
-            rotulo={`Comissão do estúdio${comissao > 0 ? ` (${percentualComissao}%)` : ""}`}
-            valor={-comissao}
+            rotulo={
+              proprio
+                ? "Contas fixas"
+                : `Comissão do estúdio${custoEstudio > 0 ? ` (${percentualComissao}%)` : ""}`
+            }
+            valor={-custoEstudio}
           />
           <Linha rotulo="Despesas" valor={-totalDespesas} />
           <div className="mt-1 flex items-center justify-between border-t border-border pt-2 text-base font-semibold">
@@ -182,7 +193,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
           </div>
           {semConfiguracao && (
             <p className="text-xs text-muted">
-              Configure as taxas da maquininha e a comissão do estúdio em{" "}
+              Configure as taxas da maquininha e os custos do estúdio em{" "}
               <Link href="/conta" className="underline">
                 Conta
               </Link>

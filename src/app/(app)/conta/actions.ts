@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { lerPercentual } from "@/lib/financeiro";
+import { lerPercentual, lerReais } from "@/lib/financeiro";
 
 export type EstadoConta = { erro?: string; mensagem?: string } | undefined;
 
@@ -27,12 +27,20 @@ export async function salvarTaxas(_: EstadoConta, formData: FormData): Promise<E
     valores[campo] = valor;
   }
 
+  const modelo = formData.get("modelo") === "proprio" ? "proprio" : "comissao";
+  const fixasDigitado = String(formData.get("contas_fixas") ?? "").trim() || null;
+  const contasFixas = fixasDigitado ? lerReais(fixasDigitado) : 0;
+  if (contasFixas === null) return { erro: "Valor das contas fixas inválido. Ex.: 1.200,00" };
+
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("configuracoes")
-    .upsert({ ...valores, atualizado_em: new Date().toISOString() });
+  const { error } = await supabase.from("configuracoes").upsert({
+    ...valores,
+    modelo,
+    contas_fixas: contasFixas,
+    atualizado_em: new Date().toISOString(),
+  });
   if (error) return { erro: "Não foi possível salvar. Tente novamente." };
 
   revalidatePath("/", "layout");
-  return { mensagem: "Taxas salvas. Valem para os próximos pagamentos." };
+  return { mensagem: "Configurações salvas." };
 }
