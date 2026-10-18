@@ -21,8 +21,11 @@ export default async function MateriaisPage({ params, searchParams }: PageProps<
       .order("nome"),
     supabase.from("sessao_materiais").select("item_id, quantidade").eq("sessao_id", id),
   ]);
-  const itens = (estoque ?? []) as Pick<ItemEstoque, "id" | "nome" | "categoria" | "quantidade">[];
   const usados = Object.fromEntries((registrados ?? []).map((m) => [m.item_id, m.quantidade]));
+  // Itens zerados não aparecem, a não ser que já tenham sido usados nesta sessão (para poder corrigir).
+  const itens = ((estoque ?? []) as Pick<ItemEstoque, "id" | "nome" | "categoria" | "quantidade">[]).filter(
+    (i) => i.quantidade > 0 || usados[i.id],
+  );
 
   const grupos = CATEGORIAS_DA_SESSAO.map((categoria) => ({
     rotulo: CATEGORIAS_ESTOQUE[categoria],
@@ -49,10 +52,10 @@ export default async function MateriaisPage({ params, searchParams }: PageProps<
         <div className="flex flex-col gap-4">
           <div className="card flex flex-col items-center gap-3 py-8 text-center">
             <p className="text-sm text-muted">
-              Você ainda não tem cartuchos, agulhas ou biqueiras no estoque.
+              Nenhum cartucho, agulha ou biqueira com quantidade no estoque.
             </p>
-            <Link href="/estoque/adicionar" className="botao-secundario">
-              Adicionar ao estoque
+            <Link href="/estoque" className="botao-secundario">
+              Ir para o estoque
             </Link>
           </div>
           {realizar && (

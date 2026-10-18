@@ -22,6 +22,8 @@ async function estoqueDe(page: Page, nome: string) {
 test("concluir a sessão registra os cartuchos usados e desconta do estoque", async ({ page }) => {
   const cartucho = `${PREFIXO} Cartucho 3RL ${Date.now().toString(36)}`;
   await criarItem(page, cartucho, 5);
+  const zerado = `${PREFIXO} Cartucho 9RM ${Date.now().toString(36)}`;
+  await criarItem(page, zerado, 0);
 
   const cliente = nomeUnico("Tom");
   await criarCliente(page, cliente);
@@ -32,6 +34,8 @@ test("concluir a sessão registra os cartuchos usados e desconta do estoque", as
   // Marcar como realizada abre a tela de materiais.
   await page.getByRole("link", { name: "Marcar como realizada" }).click();
   await expect(page.getByRole("heading", { name: "Sessão realizada" })).toBeVisible();
+  // Itens zerados no estoque não aparecem.
+  await expect(page.getByText(zerado)).toHaveCount(0);
   await page.getByRole("button", { name: `Somar 1 em ${cartucho}` }).click();
   await page.getByRole("button", { name: `Somar 1 em ${cartucho}` }).click();
   await page.getByRole("button", { name: "Salvar e concluir" }).click();
