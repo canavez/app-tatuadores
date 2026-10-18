@@ -71,8 +71,8 @@ test("valor por sessão: inválido é recusado, editar define e excluir pagament
   await page.getByRole("button", { name: "Registrar" }).click();
   await expect(page.getByText("R$ 200,00 pago · falta R$ 600,00")).toBeVisible();
 
-  page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Excluir", exact: true }).click();
+  await page.getByRole("button", { name: "Sim, excluir" }).click();
   await expect(page.getByText("R$ 0,00 pago · falta R$ 800,00")).toBeVisible();
 
   // No cliente, a sessão mostra o valor e a tatuagem mostra o total.

@@ -164,7 +164,7 @@ test("editar sessão muda o horário e excluir remove", async ({ page }) => {
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByRole("heading", { name: "18:00 – 20:30" })).toBeVisible();
 
-  page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Excluir sessão" }).click();
+  await page.getByRole("button", { name: "Sim, excluir" }).click();
   await expect(page).toHaveURL(/\/agenda$/);
 });

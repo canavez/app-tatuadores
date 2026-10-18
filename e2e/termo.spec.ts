@@ -105,8 +105,8 @@ test("excluir termo volta para pendente; impressão esconde o menu", async ({ pa
   await expect(page.getByRole("button", { name: "Imprimir / salvar PDF" })).toBeHidden();
   await page.emulateMedia({ media: "screen" });
 
-  page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Excluir termo" }).click();
+  await page.getByRole("button", { name: "Sim, excluir" }).click();
   await expect(page.getByRole("heading", { name: "Termo de consentimento", level: 1 })).toBeVisible();
 });
 

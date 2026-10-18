@@ -75,8 +75,8 @@ test("nada a declarar registra anamnese sem alertas", async ({ page }) => {
 test("excluir cliente pede confirmação", async ({ page }) => {
   const nome = nomeUnico("Fábio");
   await criarCliente(page, nome);
-  page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Excluir cliente" }).click();
+  await page.getByRole("button", { name: "Sim, excluir" }).click();
   await expect(page).toHaveURL(/\/clientes$/);
   await expect(page.getByText(nome)).toHaveCount(0);
 });
