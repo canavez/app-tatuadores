@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, CircleCheck, FileSignature, MessageCircle, Pencil, Plus, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { FORMAS, TIPOS, reais, saldoSessao } from "@/lib/financeiro";
+import { FORMAS, TIPOS, reais, saldoSessao, somar } from "@/lib/financeiro";
 import { formatarData } from "@/lib/clientes";
 import { STATUS, linkLembrete, nomeDoDia, partesLocais, type StatusSessao } from "@/lib/agenda";
 import { Avatar } from "@/components/avatar";
@@ -158,6 +158,12 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
                       {" "}
                       · {TIPOS[p.tipo]} · {FORMAS[p.forma]} · {formatarData(p.data)}
                     </span>
+                    {Number(p.taxa) > 0 && (
+                      <span className="block text-xs text-muted tabular-nums">
+                        Taxa da maquininha {reais(Number(p.taxa))} · sobra{" "}
+                        {reais(somar([p.valor, -p.taxa]))}
+                      </span>
+                    )}
                     {p.observacoes && <span className="block text-muted">{p.observacoes}</span>}
                   </span>
                   <BotaoExcluir

@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dataValida, ehStatus, paraInstante, type StatusSessao } from "@/lib/agenda";
-import { ehForma, ehTipo, lerReais } from "@/lib/financeiro";
+import { ehForma, ehTipo, lerReais, taxaDoPagamento } from "@/lib/financeiro";
+import { buscarConfiguracoes } from "@/lib/configuracoes";
 
 export type EstadoForm = { erro?: string } | undefined;
 
@@ -138,9 +139,12 @@ export async function registrarPagamento(
   if (!ehForma(forma)) return { erro: "Escolha a forma de pagamento." };
 
   const supabase = await createClient();
+  // A taxa da maquininha fica gravada com o percentual de hoje.
+  const taxa = taxaDoPagamento(await buscarConfiguracoes(), forma, valor);
   const { error } = await supabase.from("pagamentos").insert({
     sessao_id: sessaoId,
     valor,
+    taxa,
     data,
     tipo,
     forma,

@@ -22,6 +22,7 @@ export type Pagamento = {
   tipo: TipoPagamento;
   forma: Forma;
   observacoes: string | null;
+  taxa: number;
 };
 
 export function ehForma(valor: unknown): valor is Forma {
@@ -79,4 +80,60 @@ export function saldoSessao(sessao: {
     falta:
       sessao.valor === null ? null : conta ? Math.max(somar([sessao.valor, -pago]), 0) : 0,
   };
+}
+
+export const CATEGORIAS = {
+  material: "Material",
+  aluguel: "Aluguel",
+  divulgacao: "Divulgação",
+  equipamento: "Equipamento",
+  outros: "Outros",
+} as const;
+
+export type Categoria = keyof typeof CATEGORIAS;
+
+export function ehCategoria(valor: unknown): valor is Categoria {
+  return typeof valor === "string" && valor in CATEGORIAS;
+}
+
+/** Percentuais configurados na Conta (0 quando ainda não configurado). */
+export type Configuracoes = {
+  taxa_debito: number;
+  taxa_credito: number;
+  taxa_pix: number;
+  comissao_estudio: number;
+};
+
+export const SEM_CONFIGURACAO: Configuracoes = {
+  taxa_debito: 0,
+  taxa_credito: 0,
+  taxa_pix: 0,
+  comissao_estudio: 0,
+};
+
+/** Lê um percentual digitado ("3,5", "3.5", "3,5%"). Vazio vale 0; inválido devolve null. */
+export function lerPercentual(texto: string | null): number | null {
+  if (!texto) return 0;
+  const limpo = texto.replace(/[%\s]/g, "").replace(",", ".");
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(limpo)) return null;
+  const valor = Number(limpo);
+  return valor <= 100 ? valor : null;
+}
+
+/** 3.5 → "3,5" para preencher um campo. */
+export function percentualParaCampo(valor: number): string {
+  return Number(valor) === 0 ? "" : String(Number(valor)).replace(".", ",");
+}
+
+/** Taxa da maquininha, em reais, de um pagamento com essa forma e valor. */
+export function taxaDoPagamento(config: Configuracoes, forma: Forma, valor: number): number {
+  const percentual =
+    forma === "debito"
+      ? config.taxa_debito
+      : forma === "credito"
+        ? config.taxa_credito
+        : forma === "pix"
+          ? config.taxa_pix
+          : 0;
+  return Math.round(valor * Number(percentual)) / 100;
 }

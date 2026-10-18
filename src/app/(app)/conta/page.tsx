@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { sair } from "@/app/login/actions";
 import { Topo } from "@/components/topo";
 import { Avatar } from "@/components/avatar";
+import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { NomeForm } from "./nome-form";
+import { TaxasForm } from "./taxas-form";
 
 export default async function ContaPage() {
   const supabase = await createClient();
@@ -11,6 +13,7 @@ export default async function ContaPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const nome = (user?.user_metadata?.nome as string | undefined) ?? "";
+  const config = await buscarConfiguracoes();
 
   return (
     <>
@@ -25,6 +28,8 @@ export default async function ContaPage() {
         </div>
 
         <NomeForm nome={nome} />
+
+        <TaxasForm config={config} />
 
         <form action={sair}>
           <button

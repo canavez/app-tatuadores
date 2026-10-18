@@ -12,7 +12,7 @@ export type SessaoCompleta = Sessao & {
 
 export const SELECT_SESSAO_COMPLETA =
   "id, tatuagem_id, inicio, fim, status, observacoes, valor, " +
-  "pagamentos(id, sessao_id, valor, data, tipo, forma, observacoes), " +
+  "pagamentos(id, sessao_id, valor, taxa, data, tipo, forma, observacoes), " +
   "tatuagem:tatuagens!inner(id, cliente_id, descricao, local_corpo, " +
   "cliente:clientes!inner(id, nome, telefone))";
 
