@@ -5,6 +5,7 @@ import {
   FileSignature,
   HeartPulse,
   MessageCircle,
+  Package,
   Plus,
   TriangleAlert,
   Wallet,
@@ -13,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hoje, linkLembrete, nomeDoDia, paraInstante, partesLocais, somarDias } from "@/lib/agenda";
 import { alertas, type Anamnese } from "@/lib/anamnese";
 import { reais, saldoSessao, somar } from "@/lib/financeiro";
+import { acabando, type ItemEstoque } from "@/lib/estoque";
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao, type SessaoDoCard } from "@/components/card-sessao";
@@ -104,12 +106,19 @@ export default async function HojePage() {
   const amanha = somarDias(dia, 1);
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("sessoes")
-    .select(SELECT)
-    .gte("inicio", paraInstante(dia, "00:00"))
-    .lt("inicio", paraInstante(somarDias(dia, 2), "00:00"))
-    .order("inicio");
+  const [{ data, error }, { data: estoque }] = await Promise.all([
+    supabase
+      .from("sessoes")
+      .select(SELECT)
+      .gte("inicio", paraInstante(dia, "00:00"))
+      .lt("inicio", paraInstante(somarDias(dia, 2), "00:00"))
+      .order("inicio"),
+    supabase
+      .from("itens_estoque")
+      .select("id, nome, quantidade, unidade, estoque_minimo")
+      .gt("estoque_minimo", 0)
+      .order("nome"),
+  ]);
   const sessoes = (data ?? []) as unknown as SessaoDoDia[];
 
   const deHoje = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
@@ -119,6 +128,16 @@ export default async function HojePage() {
   const ativasHoje = deHoje.filter((s) => s.status !== "cancelado");
   const aReceberHoje = somar(deHoje.map((s) => saldoSessao(s).falta));
   const pendencias = deHoje.flatMap(pendenciasDa);
+  for (const item of ((estoque ?? []) as ItemEstoque[]).filter(acabando)) {
+    pendencias.push({
+      chave: `estoque-${item.id}`,
+      href: `/estoque/${item.id}`,
+      Icone: Package,
+      texto: `Acabando: ${item.nome}`,
+      detalhe: `${item.quantidade} ${item.unidade} · mínimo ${item.estoque_minimo}`,
+      cor: "text-amber-600 dark:text-amber-400",
+    });
+  }
 
   return (
     <>

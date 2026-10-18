@@ -21,4 +21,7 @@ export default async function limpeza() {
 
   const despesas = await supabase.from("despesas").delete().like("descricao", `${PREFIXO}%`);
   if (despesas.error) throw despesas.error;
+
+  const estoque = await supabase.from("itens_estoque").delete().like("nome", `${PREFIXO}%`);
+  if (estoque.error) throw estoque.error;
 }
