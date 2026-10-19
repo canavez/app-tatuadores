@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { semLimpar, useHidratado } from "@/lib/formulario";
+import { semLimpar } from "@/lib/formulario";
 import { FORMAS, TIPOS, type TipoPagamento } from "@/lib/financeiro";
 import { registrarPagamento } from "../../actions";
 
@@ -49,14 +49,13 @@ export function PagamentoForm({
   tipoInicial,
   valorSugerido,
 }: Props) {
-  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(
     registrarPagamento.bind(null, sessaoId),
     undefined,
   );
 
   return (
-    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
+    <form {...semLimpar(acao)} className="card flex flex-col gap-4">
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">Tipo</legend>
         <Opcoes nome="tipo" opcoes={TIPOS} inicial={tipoInicial} />
@@ -96,7 +95,7 @@ export function PagamentoForm({
         <Link href={`/agenda/${sessaoId}`} className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente || !pronto}>
+        <button type="submit" className="botao" disabled={pendente}>
           {pendente ? "Salvando..." : "Registrar"}
         </button>
       </div>

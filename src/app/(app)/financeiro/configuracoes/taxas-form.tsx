@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { semLimpar, useHidratado } from "@/lib/formulario";
+import { semLimpar } from "@/lib/formulario";
 import { percentualParaCampo, reaisParaCampo, type Configuracoes } from "@/lib/financeiro";
 import { salvarTaxas } from "../actions";
 
@@ -17,12 +17,11 @@ const MODELOS = [
 ] as const;
 
 export function TaxasForm({ config }: { config: Configuracoes }) {
-  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(salvarTaxas, undefined);
   const [modelo, setModelo] = useState(config.modelo);
 
   return (
-    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
+    <form {...semLimpar(acao)} className="card flex flex-col gap-4">
       <p className="text-sm text-muted">
         Usados para calcular o lucro do mês. Deixe em branco o que não se aplica.
       </p>
@@ -97,7 +96,7 @@ export function TaxasForm({ config }: { config: Configuracoes }) {
         <Link href="/financeiro" className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente || !pronto}>
+        <button type="submit" className="botao" disabled={pendente}>
           {pendente ? "Salvando..." : "Salvar"}
         </button>
       </div>

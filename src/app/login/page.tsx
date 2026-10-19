@@ -1,12 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { semLimpar, useHidratado } from "@/lib/formulario";
+import { semLimpar } from "@/lib/formulario";
 import { criarConta, entrar } from "./actions";
 
 export default function LoginPage() {
   const [modo, setModo] = useState<"entrar" | "criar">("entrar");
-  const pronto = useHidratado();
   const [estadoEntrar, acaoEntrar, entrando] = useActionState(entrar, undefined);
   const [estadoCriar, acaoCriar, criando] = useActionState(criarConta, undefined);
 
@@ -25,7 +24,7 @@ export default function LoginPage() {
         </p>
 
         <form
-          onSubmit={semLimpar(criandoConta ? acaoCriar : acaoEntrar)}
+          {...semLimpar(criandoConta ? acaoCriar : acaoEntrar)}
           className="card mt-8 flex flex-col gap-4"
         >
           {criandoConta && (
@@ -52,7 +51,7 @@ export default function LoginPage() {
           {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
           {estado?.mensagem && <p className="aviso-ok">{estado.mensagem}</p>}
 
-          <button type="submit" className="botao" disabled={pendente || !pronto}>
+          <button type="submit" className="botao" disabled={pendente}>
             {pendente ? "Aguarde..." : criandoConta ? "Criar conta" : "Entrar"}
           </button>
         </form>

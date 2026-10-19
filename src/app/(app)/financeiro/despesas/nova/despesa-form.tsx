@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { semLimpar, useHidratado } from "@/lib/formulario";
+import { semLimpar } from "@/lib/formulario";
 import { CATEGORIAS } from "@/lib/financeiro";
 import { registrarDespesa } from "../../actions";
 
 export function DespesaForm({ voltar, dataInicial }: { voltar: string; dataInicial: string }) {
-  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(registrarDespesa, undefined);
 
   return (
-    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
+    <form {...semLimpar(acao)} className="card flex flex-col gap-4">
       <label className="campo">
         Descrição *
         <input name="descricao" required autoFocus placeholder="Ex.: tintas, agulhas, aluguel da sala" />
@@ -54,7 +53,7 @@ export function DespesaForm({ voltar, dataInicial }: { voltar: string; dataInici
         <Link href={voltar} className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente || !pronto}>
+        <button type="submit" className="botao" disabled={pendente}>
           {pendente ? "Salvando..." : "Registrar"}
         </button>
       </div>

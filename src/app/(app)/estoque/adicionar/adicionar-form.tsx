@@ -2,18 +2,17 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { semLimpar, useHidratado } from "@/lib/formulario";
+import { semLimpar } from "@/lib/formulario";
 import { CATEGORIAS_ESTOQUE, type CategoriaEstoque } from "@/lib/estoque";
 import { adicionarItens } from "../actions";
 
 type Props = { grupos: { categoria: CategoriaEstoque; itens: string[] }[] };
 
 export function AdicionarForm({ grupos }: Props) {
-  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(adicionarItens, undefined);
 
   return (
-    <form onSubmit={semLimpar(acao)} className="flex flex-col gap-4">
+    <form {...semLimpar(acao)} className="flex flex-col gap-4">
       {grupos.map(({ categoria, itens }) => (
         <fieldset key={categoria} className="card flex flex-col gap-3">
           <legend className="sr-only">{CATEGORIAS_ESTOQUE[categoria]}</legend>
@@ -58,7 +57,7 @@ export function AdicionarForm({ grupos }: Props) {
         <Link href="/estoque" className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente || !pronto}>
+        <button type="submit" className="botao" disabled={pendente}>
           {pendente ? "Adicionando..." : "Adicionar ao estoque"}
         </button>
       </div>

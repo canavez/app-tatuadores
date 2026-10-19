@@ -28,6 +28,23 @@ test.describe("sem login", () => {
   });
 });
 
+test.describe("navegador sem JavaScript (ex.: iPad antigo)", () => {
+  test.use({ storageState: { cookies: [], origins: [] }, javaScriptEnabled: false });
+
+  test("consegue entrar e salvar um formulário", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("E-mail").fill(process.env.TESTE_EMAIL!);
+    await page.getByLabel("Senha").fill(process.env.TESTE_SENHA!);
+    await page.getByRole("button", { name: "Entrar" }).click();
+    await expect(page).toHaveURL(/\/hoje$/);
+
+    await page.goto("/conta");
+    await page.getByLabel("Seu nome profissional").fill("Estúdio Teste Ravenn");
+    await page.getByRole("button", { name: "Salvar nome" }).click();
+    await expect(page.getByText("Nome salvo.")).toBeVisible();
+  });
+});
+
 test("logado, /login volta para a tela Hoje", async ({ page }) => {
   await page.goto("/login");
   await expect(page).toHaveURL(/\/hoje$/);

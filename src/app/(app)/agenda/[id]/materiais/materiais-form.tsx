@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { semLimpar, useHidratado } from "@/lib/formulario";
+import { semLimpar } from "@/lib/formulario";
 import { salvarMateriais } from "../../actions";
 
 type Grupo = { rotulo: string; itens: { id: string; nome: string; quantidade: number }[] };
@@ -17,7 +17,6 @@ type Props = {
 };
 
 export function MateriaisForm({ sessaoId, realizar, grupos, usados, acaoPular }: Props) {
-  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(salvarMateriais.bind(null, sessaoId, realizar), undefined);
   const [qtd, setQtd] = useState<Record<string, number>>(usados);
   const mudar = (id: string, delta: number) =>
@@ -25,7 +24,7 @@ export function MateriaisForm({ sessaoId, realizar, grupos, usados, acaoPular }:
 
   return (
     <div className="flex flex-col gap-4">
-      <form id="materiais" onSubmit={semLimpar(acao)} className="flex flex-col gap-4">
+      <form id="materiais" {...semLimpar(acao)} className="flex flex-col gap-4">
         {grupos.map((g) => (
           <section key={g.rotulo} className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">{g.rotulo}</h2>
@@ -83,7 +82,7 @@ export function MateriaisForm({ sessaoId, realizar, grupos, usados, acaoPular }:
             Cancelar
           </Link>
         )}
-        <button type="submit" form="materiais" className="botao" disabled={pendente || !pronto}>
+        <button type="submit" form="materiais" className="botao" disabled={pendente}>
           {pendente ? "Salvando..." : realizar ? "Salvar e concluir" : "Salvar"}
         </button>
       </div>

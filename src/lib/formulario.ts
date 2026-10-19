@@ -1,27 +1,21 @@
-import { startTransition, useSyncExternalStore, type FormEvent } from "react";
+import { startTransition, type FormEvent } from "react";
 
 /**
- * Envia o formulário para a ação sem que o React limpe os campos depois.
- * Com `<form action={...}>` o React 19 apaga tudo o que foi digitado ao terminar,
- * inclusive quando a ação devolve um erro — e aí a pessoa teria que preencher de novo.
- * Uso: `<form onSubmit={semLimpar(acao)}>`.
+ * Props para um <form> que envia para uma ação sem o React limpar os campos depois.
+ * - Com JavaScript: o onSubmit cancela o envio padrão e chama a ação; assim o React 19
+ *   não apaga o que foi digitado quando a ação devolve um erro.
+ * - Sem JavaScript (página ainda carregando ou navegador antigo): o `action` faz o
+ *   navegador mandar o formulário direto para o servidor, e funciona do mesmo jeito.
+ * Uso: `<form {...semLimpar(acao)}>`.
  */
 export function semLimpar(acao: (formData: FormData) => void) {
-  return (evento: FormEvent<HTMLFormElement>) => {
-    evento.preventDefault();
-    const submissor = (evento.nativeEvent as SubmitEvent).submitter;
-    const formData = new FormData(evento.currentTarget, submissor);
-    startTransition(() => acao(formData));
+  return {
+    action: acao,
+    onSubmit: (evento: FormEvent<HTMLFormElement>) => {
+      evento.preventDefault();
+      const submissor = (evento.nativeEvent as SubmitEvent).submitter;
+      const formData = new FormData(evento.currentTarget, submissor);
+      startTransition(() => acao(formData));
+    },
   };
-}
-
-const naoMuda = () => () => {};
-
-/**
- * true só depois que a página carregou no navegador. Antes disso, um toque em
- * "Salvar" faria o navegador enviar o formulário sozinho (os dados iriam para o
- * endereço da página e nada seria salvo), então os botões ficam desativados.
- */
-export function useHidratado(): boolean {
-  return useSyncExternalStore(naoMuda, () => true, () => false);
 }

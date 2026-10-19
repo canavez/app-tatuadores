@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { semLimpar, useHidratado } from "@/lib/formulario";
+import { semLimpar } from "@/lib/formulario";
 import { CATEGORIAS_ESTOQUE, type ItemEstoque } from "@/lib/estoque";
 import { salvarItem } from "../actions";
 
 export function ItemForm({ item }: { item: ItemEstoque }) {
-  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(salvarItem.bind(null, item.id), undefined);
 
   return (
-    <form onSubmit={semLimpar(acao)} className="card flex flex-col gap-4">
+    <form {...semLimpar(acao)} className="card flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="campo">
           Nome *
@@ -59,7 +58,7 @@ export function ItemForm({ item }: { item: ItemEstoque }) {
         <Link href="/estoque" className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente || !pronto}>
+        <button type="submit" className="botao" disabled={pendente}>
           {pendente ? "Salvando..." : "Salvar"}
         </button>
       </div>
