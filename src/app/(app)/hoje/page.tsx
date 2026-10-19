@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
 import {
   ChevronRight,
   FileSignature,
@@ -11,13 +10,23 @@ import {
   Wallet,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { hoje, linkLembrete, nomeDoDia, paraInstante, partesLocais, somarDias } from "@/lib/agenda";
+import {
+  diaDaSemanaCurto,
+  hoje,
+  linkLembrete,
+  nomeDoDia,
+  paraInstante,
+  partesLocais,
+  somarDias,
+} from "@/lib/agenda";
+import { formatarData } from "@/lib/clientes";
 import { alertas, type Anamnese } from "@/lib/anamnese";
 import { reais, saldoSessao, somar } from "@/lib/financeiro";
 import { acabando, type ItemEstoque } from "@/lib/estoque";
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao, type SessaoDoCard } from "@/components/card-sessao";
+import { ProximaSessao, type Pendencia } from "./proxima-sessao";
 
 type SessaoDoDia = SessaoDoCard & {
   tatuagem_id: string;
@@ -36,8 +45,6 @@ const SELECT =
 function um<T>(valor: T | T[] | null): T | null {
   return Array.isArray(valor) ? (valor[0] ?? null) : valor;
 }
-
-type Pendencia = { chave: string; href: string; Icone: LucideIcon; texto: string; detalhe: string; cor: string };
 
 function pendenciasDa(s: SessaoDoDia): Pendencia[] {
   if (s.status !== "agendado" && s.status !== "confirmado") return [];
@@ -101,33 +108,72 @@ function pendenciasDa(s: SessaoDoDia): Pendencia[] {
   return lista;
 }
 
+/** "Bom dia" / "Boa tarde" / "Boa noite" no horário de Brasília. */
+function saudacao(): string {
+  const hora = new Date(Date.now() - 3 * 60 * 60 * 1000).getUTCHours();
+  return hora >= 5 && hora < 12 ? "Bom dia" : hora >= 12 && hora < 18 ? "Boa tarde" : "Boa noite";
+}
+
+/** Quando é a sessão, do jeito que se fala: "até 17:00", "Hoje às 14:00 · em 2 h", "Amanhã às 10:00". */
+function quando(s: SessaoDoDia, dia: string): string {
+  const agora = Date.now();
+  const inicio = new Date(s.inicio).getTime();
+  const { data, hora } = partesLocais(s.inicio);
+  if (inicio <= agora) return `até ${partesLocais(s.fim).hora}`;
+  if (data === dia) {
+    const minutos = Math.round((inicio - agora) / 60_000);
+    return `Hoje às ${hora} · ${minutos < 60 ? `em ${minutos} min` : `em ${Math.round(minutos / 60)} h`}`;
+  }
+  if (data === somarDias(dia, 1)) return `Amanhã às ${hora}`;
+  const semana = diaDaSemanaCurto(data).replace(/^./, (c) => c.toUpperCase());
+  return `${semana}, ${formatarData(data).slice(0, 5)} às ${hora}`;
+}
+
+const ativa = (s: { status: string }) => s.status === "agendado" || s.status === "confirmado";
+
 export default async function HojePage() {
   const dia = hoje();
   const amanha = somarDias(dia, 1);
+  const agora = new Date().toISOString();
 
   const supabase = await createClient();
-  const [{ data, error }, { data: estoque }] = await Promise.all([
+  const [{ data, error }, { data: estoque }, { data: maisAdiante }, usuario] = await Promise.all([
+    // Hoje e os próximos 7 dias.
     supabase
       .from("sessoes")
       .select(SELECT)
       .gte("inicio", paraInstante(dia, "00:00"))
-      .lt("inicio", paraInstante(somarDias(dia, 2), "00:00"))
+      .lt("inicio", paraInstante(somarDias(dia, 7), "00:00"))
       .order("inicio"),
     supabase
       .from("itens_estoque")
       .select("id, nome, quantidade, unidade, estoque_minimo")
       .gt("estoque_minimo", 0)
       .order("nome"),
+    // Se não houver nada na semana, a próxima sessão mais adiante.
+    supabase
+      .from("sessoes")
+      .select(SELECT)
+      .gte("inicio", paraInstante(somarDias(dia, 7), "00:00"))
+      .in("status", ["agendado", "confirmado"])
+      .order("inicio")
+      .limit(1),
+    supabase.auth.getUser(),
   ]);
   const sessoes = (data ?? []) as unknown as SessaoDoDia[];
+  const primeiroNome = ((usuario.data.user?.user_metadata?.nome as string | undefined) ?? "").split(" ")[0];
 
   const deHoje = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
-  const deAmanha = sessoes.filter(
-    (s) => partesLocais(s.inicio).data === amanha && (s.status === "agendado" || s.status === "confirmado"),
-  );
   const ativasHoje = deHoje.filter((s) => s.status !== "cancelado");
-  const aReceberHoje = somar(deHoje.map((s) => saldoSessao(s).falta));
-  const pendencias = deHoje.flatMap(pendenciasDa);
+  // A que está acontecendo agora ou a próxima que ainda vai começar.
+  const proxima =
+    sessoes.find((s) => ativa(s) && s.fim > agora) ?? ((maisAdiante ?? []) as unknown as SessaoDoDia[])[0] ?? null;
+  const deAmanha = sessoes.filter((s) => partesLocais(s.inicio).data === amanha && ativa(s) && s.id !== proxima?.id);
+  const daSemana = sessoes.filter((s) => s.status !== "cancelado" && s.status !== "faltou");
+  const aReceberSemana = somar(daSemana.map((s) => saldoSessao(s).falta));
+
+  // As pendências da próxima sessão aparecem no destaque dela; aqui ficam as outras de hoje.
+  const pendencias = deHoje.filter((s) => s.id !== proxima?.id).flatMap(pendenciasDa);
   for (const item of ((estoque ?? []) as ItemEstoque[]).filter(acabando)) {
     pendencias.push({
       chave: `estoque-${item.id}`,
@@ -139,31 +185,39 @@ export default async function HojePage() {
     });
   }
 
+  const resumoDia =
+    ativasHoje.length === 0 ? "dia livre" : `${ativasHoje.length} ${ativasHoje.length === 1 ? "sessão" : "sessões"}`;
+
   return (
     <>
-      <Topo titulo="Hoje" subtitulo={nomeDoDia(dia)} />
+      <Topo
+        titulo={primeiroNome ? `${saudacao()}, ${primeiroNome}` : saudacao()}
+        subtitulo={`${nomeDoDia(dia)} · ${resumoDia}`}
+      />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {error && <p className="aviso-erro">Erro ao carregar o dia.</p>}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card">
-            <p className="text-xs text-muted">Sessões hoje</p>
-            <p className="text-xl font-semibold tabular-nums">{ativasHoje.length}</p>
+        {proxima ? (
+          <ProximaSessao
+            sessao={proxima}
+            quando={quando(proxima, dia)}
+            agoraMesmo={proxima.inicio <= agora}
+            pendencias={pendenciasDa(proxima)}
+          />
+        ) : (
+          <div className="card flex flex-col items-center gap-3 py-8 text-center">
+            <p className="text-muted">Nenhuma sessão marcada pela frente.</p>
+            <Link href={`/agenda/nova?data=${dia}`} className="botao-secundario gap-2">
+              <Plus className="size-4" />
+              Agendar sessão
+            </Link>
           </div>
-          <div className="card">
-            <p className="text-xs text-muted">A receber hoje</p>
-            <p className="text-xl font-semibold tabular-nums text-amber-700 dark:text-amber-400">
-              {reais(aReceberHoje)}
-            </p>
-          </div>
-        </div>
+        )}
 
         {pendencias.length > 0 && (
           <section className="flex flex-col gap-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Pendências ({pendencias.length})
-            </h2>
+            <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Pendências</h2>
             <ul className="card divide-y divide-border p-0">
               {pendencias.map((p) => (
                 <li key={p.chave}>
@@ -181,17 +235,9 @@ export default async function HojePage() {
           </section>
         )}
 
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Sessões de hoje</h2>
-          {deHoje.length === 0 ? (
-            <div className="card flex flex-col items-center gap-3 py-10 text-center">
-              <p className="text-muted">Nenhuma sessão hoje</p>
-              <Link href={`/agenda/nova?data=${dia}`} className="botao-secundario gap-2">
-                <Plus className="size-4" />
-                Agendar para hoje
-              </Link>
-            </div>
-          ) : (
+        {deHoje.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Sessões de hoje</h2>
             <ul className="flex flex-col gap-2">
               {deHoje.map((s) => (
                 <li key={s.id}>
@@ -199,16 +245,12 @@ export default async function HojePage() {
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </section>
+        )}
 
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-            Amanhã · lembretes
-          </h2>
-          {deAmanha.length === 0 ? (
-            <div className="card py-6 text-center text-sm text-muted">Nenhuma sessão amanhã.</div>
-          ) : (
+        {deAmanha.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Amanhã · lembretes</h2>
             <ul className="card divide-y divide-border p-0">
               {deAmanha.map((s) => {
                 const { cliente } = s.tatuagem;
@@ -237,8 +279,24 @@ export default async function HojePage() {
                 );
               })}
             </ul>
-          )}
-        </section>
+          </section>
+        )}
+
+        {daSemana.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Próximos 7 dias</h2>
+            <Link href="/agenda" className="card flex items-center justify-between gap-3 py-3 text-sm">
+              <span>
+                <span className="font-semibold tabular-nums">{daSemana.length}</span>{" "}
+                <span className="text-muted">{daSemana.length === 1 ? "sessão" : "sessões"}</span>
+              </span>
+              <span>
+                <span className="font-semibold tabular-nums">{reais(aReceberSemana)}</span>{" "}
+                <span className="text-muted">a receber</span>
+              </span>
+            </Link>
+          </section>
+        )}
       </div>
 
       <BotaoFlutuante href={`/agenda/nova?data=${dia}`} rotulo="Nova sessão" />

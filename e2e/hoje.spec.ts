@@ -38,8 +38,8 @@ test("mostra as sessões do dia, as pendências e o lembrete de amanhã", async 
     await expect(page.getByRole("link", { name: new RegExp(`${pendencia}.*${nome}`) })).toBeVisible();
   }
 
-  const amanha = page.getByRole("listitem").filter({ hasText: cliente }).filter({ hasText: "Lembrar" });
-  await expect(amanha.getByRole("link", { name: "Lembrar" })).toHaveAttribute("href", /wa\.me\/5511999998888/);
+  // O lembrete do cliente aparece (no destaque da próxima sessão ou na lista de amanhã).
+  await expect(page.locator('a[href*="wa.me/5511999998888"]').first()).toBeVisible();
 
   // Resolver uma pendência pelo atalho tira ela da lista.
   await page.getByRole("link", { name: new RegExp(`Sinal não registrado.*${nome}`) }).click();
