@@ -1,4 +1,4 @@
-import { startTransition, type FormEvent } from "react";
+import { startTransition, useSyncExternalStore, type FormEvent } from "react";
 
 /**
  * Envia o formulário para a ação sem que o React limpe os campos depois.
@@ -13,4 +13,15 @@ export function semLimpar(acao: (formData: FormData) => void) {
     const formData = new FormData(evento.currentTarget, submissor);
     startTransition(() => acao(formData));
   };
+}
+
+const naoMuda = () => () => {};
+
+/**
+ * true só depois que a página carregou no navegador. Antes disso, um toque em
+ * "Salvar" faria o navegador enviar o formulário sozinho (os dados iriam para o
+ * endereço da página e nada seria salvo), então os botões ficam desativados.
+ */
+export function useHidratado(): boolean {
+  return useSyncExternalStore(naoMuda, () => true, () => false);
 }

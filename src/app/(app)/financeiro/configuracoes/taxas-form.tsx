@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { percentualParaCampo, reaisParaCampo, type Configuracoes } from "@/lib/financeiro";
 import { salvarTaxas } from "../actions";
 
@@ -17,6 +17,7 @@ const MODELOS = [
 ] as const;
 
 export function TaxasForm({ config }: { config: Configuracoes }) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(salvarTaxas, undefined);
   const [modelo, setModelo] = useState(config.modelo);
 
@@ -96,7 +97,7 @@ export function TaxasForm({ config }: { config: Configuracoes }) {
         <Link href="/financeiro" className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente}>
+        <button type="submit" className="botao" disabled={pendente || !pronto}>
           {pendente ? "Salvando..." : "Salvar"}
         </button>
       </div>

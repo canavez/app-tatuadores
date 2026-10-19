@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { salvarMateriais } from "../../actions";
 
 type Grupo = { rotulo: string; itens: { id: string; nome: string; quantidade: number }[] };
@@ -17,6 +17,7 @@ type Props = {
 };
 
 export function MateriaisForm({ sessaoId, realizar, grupos, usados, acaoPular }: Props) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(salvarMateriais.bind(null, sessaoId, realizar), undefined);
   const [qtd, setQtd] = useState<Record<string, number>>(usados);
   const mudar = (id: string, delta: number) =>
@@ -82,7 +83,7 @@ export function MateriaisForm({ sessaoId, realizar, grupos, usados, acaoPular }:
             Cancelar
           </Link>
         )}
-        <button type="submit" form="materiais" className="botao" disabled={pendente}>
+        <button type="submit" form="materiais" className="botao" disabled={pendente || !pronto}>
           {pendente ? "Salvando..." : realizar ? "Salvar e concluir" : "Salvar"}
         </button>
       </div>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { salvarNome } from "./actions";
 
 export function NomeForm({ nome }: { nome: string }) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(salvarNome, undefined);
 
   return (
@@ -16,7 +17,7 @@ export function NomeForm({ nome }: { nome: string }) {
       <p className="text-xs text-muted">Aparece nos termos de consentimento assinados pelos clientes.</p>
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
       {estado?.mensagem && <p className="aviso-ok">{estado.mensagem}</p>}
-      <button type="submit" className="botao self-end" disabled={pendente}>
+      <button type="submit" className="botao self-end" disabled={pendente || !pronto}>
         {pendente ? "Salvando..." : "Salvar nome"}
       </button>
     </form>

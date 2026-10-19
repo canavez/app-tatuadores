@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { alertas, type Anamnese } from "@/lib/anamnese";
 
 type Props = {
@@ -12,12 +13,14 @@ export function ResumoAnamnese({ clienteId, anamnese }: Props) {
 
   if (!anamnese) {
     return (
-      <div className="card flex flex-wrap items-center justify-between gap-2 border-dashed py-3">
-        <span className="text-sm text-muted">Anamnese não preenchida.</span>
-        <Link href={linkEditar} className="text-sm font-medium underline">
-          Preencher anamnese
-        </Link>
-      </div>
+      <Link href={linkEditar} className="card flex items-center gap-3 py-3 active:bg-background">
+        <span className="size-6 shrink-0 rounded-full border-2 border-dashed border-amber-400" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm">Anamnese não preenchida.</span>
+          <span className="block text-xs text-amber-400">Preencher anamnese</span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted" />
+      </Link>
     );
   }
 

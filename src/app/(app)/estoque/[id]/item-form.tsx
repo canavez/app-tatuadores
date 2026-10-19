@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { CATEGORIAS_ESTOQUE, type ItemEstoque } from "@/lib/estoque";
 import { salvarItem } from "../actions";
 
 export function ItemForm({ item }: { item: ItemEstoque }) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(salvarItem.bind(null, item.id), undefined);
 
   return (
@@ -58,7 +59,7 @@ export function ItemForm({ item }: { item: ItemEstoque }) {
         <Link href="/estoque" className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente}>
+        <button type="submit" className="botao" disabled={pendente || !pronto}>
           {pendente ? "Salvando..." : "Salvar"}
         </button>
       </div>

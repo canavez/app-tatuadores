@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { STATUS, type Tatuagem } from "@/lib/agenda";
 import { reaisParaCampo } from "@/lib/financeiro";
 import { salvarSessao } from "./actions";
@@ -38,6 +38,7 @@ export function SessaoForm({
   inicioInicial,
   fimInicial,
 }: Props) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(
     salvarSessao.bind(null, sessao?.id ?? null),
     undefined,
@@ -176,7 +177,7 @@ export function SessaoForm({
         <Link href={sessao ? `/agenda/${sessao.id}` : "/agenda"} className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente}>
+        <button type="submit" className="botao" disabled={pendente || !pronto}>
           {pendente ? "Salvando..." : "Salvar"}
         </button>
       </div>

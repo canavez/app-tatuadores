@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import type { Cliente } from "@/lib/clientes";
+import { formatarData, type Cliente } from "@/lib/clientes";
+import { diaDaSemanaCurto, partesLocais } from "@/lib/agenda";
 import { Avatar } from "@/components/avatar";
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
@@ -18,12 +19,60 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
       `nome.ilike.%${busca}%,telefone.ilike.%${busca}%,instagram.ilike.%${busca}%`,
     );
   }
-  const { data, error } = await consulta;
+  const [{ data, error }, { data: sessoesData }] = await Promise.all([
+    consulta,
+    supabase
+      .from("sessoes")
+      .select(
+        "inicio, status, tatuagem:tatuagens!inner(cliente_id, termos(id), cliente:clientes!inner(anamneses(cliente_id)))",
+      )
+      .neq("status", "cancelado")
+      .order("inicio"),
+  ]);
   const clientes = (data ?? []) as Pick<Cliente, "id" | "nome" | "telefone" | "instagram">[];
+
+  // Próxima e última sessão de cada cliente, e o que falta para a próxima.
+  type SessaoResumo = {
+    inicio: string;
+    status: string;
+    tatuagem: {
+      cliente_id: string;
+      termos: unknown;
+      cliente: { anamneses: unknown };
+    };
+  };
+  const agora = new Date().toISOString();
+  const proxima = new Map<string, SessaoResumo>();
+  const ultima = new Map<string, SessaoResumo>();
+  for (const s of (sessoesData ?? []) as unknown as SessaoResumo[]) {
+    const id = s.tatuagem.cliente_id;
+    const ativa = s.status === "agendado" || s.status === "confirmado";
+    if (s.inicio >= agora && ativa) {
+      if (!proxima.has(id)) proxima.set(id, s);
+    } else if (s.inicio < agora) {
+      ultima.set(id, s);
+    }
+  }
+  const vazio = (v: unknown) => v === null || (Array.isArray(v) && v.length === 0);
+  const pendencia = (s: SessaoResumo) =>
+    vazio(s.tatuagem.termos) ? "Termo" : vazio(s.tatuagem.cliente.anamneses) ? "Anamnese" : null;
+  const curto = (instante: string) => {
+    const { data, hora } = partesLocais(instante);
+    return `${diaDaSemanaCurto(data)}, ${formatarData(data).slice(0, 5)} · ${hora}`;
+  };
 
   return (
     <>
-      <Topo titulo="Clientes" />
+      <Topo
+        titulo="Clientes"
+        acoes={
+          clientes.length > 0 && (
+            <span className="text-sm text-muted">
+              {clientes.length} {clientes.length === 1 ? "cliente" : "clientes"}
+            </span>
+          )
+        }
+      />
 
       <form role="search" className="relative mb-4">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted" />
@@ -33,7 +82,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
           defaultValue={busca}
           aria-label="Buscar clientes"
           placeholder="Buscar por nome, telefone ou Instagram"
-          className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-3 outline-none focus:border-foreground"
+          className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-3 outline-none placeholder:text-muted/70 focus:border-accent"
         />
       </form>
 
@@ -54,7 +103,11 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
 
       {clientes.length > 0 && (
         <ul className="card divide-y divide-border p-0">
-          {clientes.map((c) => (
+          {clientes.map((c) => {
+            const prox = proxima.get(c.id);
+            const ult = ultima.get(c.id);
+            const falta = prox ? pendencia(prox) : null;
+            return (
             <li key={c.id}>
               <Link
                 href={`/clientes/${c.id}`}
@@ -63,15 +116,24 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
                 <Avatar nome={c.nome} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{c.nome}</span>
-                  <span className="block truncate text-sm text-muted">
-                    {[c.telefone, c.instagram && `@${c.instagram}`].filter(Boolean).join(" · ") ||
-                      "Sem contato"}
-                  </span>
+                  {prox ? (
+                    <span className="block truncate text-sm text-violet-300">Próxima: {curto(prox.inicio)}</span>
+                  ) : (
+                    <span className="block truncate text-sm text-muted">
+                      {ult ? `Última sessão ${formatarData(partesLocais(ult.inicio).data).slice(0, 5)}` : "Nenhuma sessão ainda"}
+                    </span>
+                  )}
                 </span>
+                {falta && (
+                  <span className="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
+                    {falta}
+                  </span>
+                )}
                 <ChevronRight className="size-4 shrink-0 text-muted" />
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
 

@@ -6,10 +6,9 @@ import {
   FileSignature,
   MessageCircle,
   Pencil,
-  Wallet,
 } from "lucide-react";
 import { calcularIdade, formatarData, linkWhatsApp } from "@/lib/clientes";
-import { STATUS, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
+import { STATUS, diaDaSemanaCurto, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
 import { createClient } from "@/lib/supabase/server";
 import { reais, saldoSessao, somar } from "@/lib/financeiro";
 import { Avatar } from "@/components/avatar";
@@ -40,8 +39,18 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
     termos: { id: string } | { id: string }[] | null;
   })[];
 
+  const todasSessoes = tatuagens.flatMap((t) => t.sessoes);
+  const totalSessoes = todasSessoes.filter((s) => s.status !== "cancelado").length;
+  const aReceber = somar(todasSessoes.map((s) => saldoSessao(s).falta));
+  const desde = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric", timeZone: "America/Sao_Paulo" })
+    .format(new Date(cliente.criado_em))
+    .replace(" de ", "/")
+    .replace(".", "");
+
   // Só mostra os dados que foram preenchidos.
   const dados = [
+    { rotulo: "Telefone", valor: cliente.telefone },
+    { rotulo: "Instagram", valor: cliente.instagram && `@${cliente.instagram}` },
     { rotulo: "E-mail", valor: cliente.email },
     {
       rotulo: "Nascimento",
@@ -53,7 +62,7 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
   return (
     <>
       <Topo
-        titulo={cliente.nome}
+        titulo="Cliente"
         voltar="/clientes"
         acoes={
           <BotaoIcone href={`/clientes/${cliente.id}/editar`} rotulo="Editar">
@@ -65,16 +74,18 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <Avatar nome={cliente.nome} tamanho="grande" />
-          <div className="min-w-0 text-sm">
-            {cliente.telefone && <p className="tabular-nums">{cliente.telefone}</p>}
-            {cliente.instagram && <p className="text-muted">@{cliente.instagram}</p>}
-            {idade !== null && idade < 18 && (
-              <span className="mt-1 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                Menor de idade — exige autorização do responsável
-              </span>
-            )}
+          <div className="min-w-0">
+            <h2 className="truncate text-xl font-semibold">{cliente.nome}</h2>
+            <p className="text-sm text-muted">
+              {[idade !== null && `${idade} anos`, `cliente desde ${desde}`].filter(Boolean).join(" · ")}
+            </p>
           </div>
         </div>
+        {idade !== null && idade < 18 && (
+          <span className="self-start rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-300">
+            Menor de idade — exige autorização do responsável
+          </span>
+        )}
 
         {/* Ações rápidas */}
         <div className="grid grid-cols-3 gap-2">
@@ -101,6 +112,24 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
           </AcaoRapida>
         </div>
 
+        {/* Resumo */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="card px-2 py-3">
+            <p className="text-lg font-semibold tabular-nums">{tatuagens.length}</p>
+            <p className="text-xs text-muted">{tatuagens.length === 1 ? "tatuagem" : "tatuagens"}</p>
+          </div>
+          <div className="card px-2 py-3">
+            <p className="text-lg font-semibold tabular-nums">{totalSessoes}</p>
+            <p className="text-xs text-muted">{totalSessoes === 1 ? "sessão" : "sessões"}</p>
+          </div>
+          <div className="card px-2 py-3">
+            <p className={`text-lg font-semibold tabular-nums ${aReceber > 0 ? "text-amber-400" : ""}`}>
+              {reais(aReceber).replace(",00", "")}
+            </p>
+            <p className="text-xs text-muted">a receber</p>
+          </div>
+        </div>
+
         <ResumoAnamnese clienteId={cliente.id} anamnese={anamnese} />
 
         {(dados.length > 0 || cliente.observacoes) && (
@@ -120,19 +149,19 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
           </dl>
         )}
 
-        <h2 className="mt-2 text-sm font-semibold uppercase tracking-wide text-muted">Tatuagens</h2>
+        <h2 className="mt-2 text-xs font-medium uppercase tracking-wide text-muted">Tatuagens</h2>
 
         {tatuagens.length === 0 ? (
           <div className="card py-8 text-center text-sm text-muted">Nenhuma tatuagem ainda.</div>
         ) : (
           tatuagens.map((t) => (
             <section key={t.id} className="card p-0">
-              <header className="flex items-start gap-3 px-4 pb-1 pt-3">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-medium">{t.descricao}</h3>
-                  {t.local_corpo && <p className="text-sm text-muted">{t.local_corpo}</p>}
+              <header className="flex flex-col gap-0.5 px-4 pb-1 pt-3">
+                <div className="flex items-start gap-3">
+                  <h3 className="min-w-0 flex-1 font-medium">{t.descricao}</h3>
+                  <SeloTermo tatuagemId={t.id} assinado={temTermo(t.termos)} />
                 </div>
-                <SeloTermo tatuagemId={t.id} assinado={temTermo(t.termos)} />
+                <ResumoTatuagem localCorpo={t.local_corpo} sessoes={t.sessoes} />
               </header>
               <ul className="divide-y divide-border">
                 {t.sessoes.map((s) => {
@@ -144,11 +173,11 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
                         className="flex items-center gap-3 px-4 py-3 text-sm active:bg-background"
                       >
                         <span className="tabular-nums">
-                          {formatarData(inicio.data)} às {inicio.hora}
+                          {diaDaSemanaCurto(inicio.data).replace(/^./, (c) => c.toUpperCase())},{" "}
+                          {formatarData(inicio.data).slice(0, 5)}
+                          {inicio.data.slice(0, 4) !== String(new Date().getFullYear()) && `/${inicio.data.slice(2, 4)}`} ·{" "}
+                          {inicio.hora}
                         </span>
-                        {s.valor !== null && (
-                          <span className="text-muted tabular-nums">{reais(Number(s.valor))}</span>
-                        )}
                         <span
                           className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS[s.status].cor}`}
                         >
@@ -159,7 +188,6 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
                     </li>
                   );
                 })}
-                <ResumoFinanceiro sessoes={t.sessoes} />
               </ul>
             </section>
           ))
@@ -177,28 +205,29 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
   );
 }
 
-/** Total da tatuagem: soma das sessões que contam (não canceladas nem com falta). */
-function ResumoFinanceiro({
+/** Local do corpo e total da tatuagem (soma das sessões que contam: não canceladas nem com falta). */
+function ResumoTatuagem({
+  localCorpo,
   sessoes,
 }: {
+  localCorpo: string | null;
   sessoes: { valor: number | null; status: string; pagamentos: { valor: number }[] }[];
 }) {
   const comValor = sessoes.filter((s) => s.valor !== null);
-  if (comValor.length === 0) return null;
-  const saldos = sessoes.map(saldoSessao);
-  const pago = somar(saldos.map((s) => s.pago));
-  const falta = somar(saldos.map((s) => s.falta));
+  const falta = somar(sessoes.map((s) => saldoSessao(s).falta));
   const total = somar(
     comValor.filter((s) => s.status !== "cancelado" && s.status !== "faltou").map((s) => s.valor),
   );
   return (
-    <li className="flex items-center gap-3 px-4 py-3 text-sm">
-      <Wallet className="size-4 text-muted" />
-      <span className="tabular-nums">
-        Total {reais(total)} · <span className="text-green-700 dark:text-green-400">{reais(pago)} pago</span>
-        {falta > 0 && <span className="text-amber-700 dark:text-amber-400"> · falta {reais(falta)}</span>}
-      </span>
-    </li>
+    <p className="text-sm text-muted tabular-nums">
+      {[localCorpo, comValor.length > 0 && `Total ${reais(total)}`].filter(Boolean).join(" · ")}
+      {comValor.length > 0 &&
+        (falta > 0 ? (
+          <span className="text-amber-400"> · falta {reais(falta)}</span>
+        ) : (
+          <span className="text-green-400"> · quitado</span>
+        ))}
+    </p>
   );
 }
 

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { CATEGORIAS_ESTOQUE, type CategoriaEstoque } from "@/lib/estoque";
 import { adicionarItens } from "../actions";
 
 type Props = { grupos: { categoria: CategoriaEstoque; itens: string[] }[] };
 
 export function AdicionarForm({ grupos }: Props) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(adicionarItens, undefined);
 
   return (
@@ -57,7 +58,7 @@ export function AdicionarForm({ grupos }: Props) {
         <Link href="/estoque" className="botao-secundario">
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente}>
+        <button type="submit" className="botao" disabled={pendente || !pronto}>
           {pendente ? "Adicionando..." : "Adicionar ao estoque"}
         </button>
       </div>

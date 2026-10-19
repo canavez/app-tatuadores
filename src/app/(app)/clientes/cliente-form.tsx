@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { formatarData, type Cliente } from "@/lib/clientes";
 import { CONDICOES, TEXTOS, type Anamnese } from "@/lib/anamnese";
 import { partesLocais } from "@/lib/agenda";
@@ -14,6 +14,7 @@ type Props = {
 };
 
 export function ClienteForm({ cliente, anamnese }: Props) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(
     salvarCliente.bind(null, cliente?.id ?? null),
     undefined,
@@ -123,7 +124,7 @@ export function ClienteForm({ cliente, anamnese }: Props) {
         >
           Cancelar
         </Link>
-        <button type="submit" className="botao" disabled={pendente}>
+        <button type="submit" className="botao" disabled={pendente || !pronto}>
           {pendente ? "Salvando..." : "Salvar"}
         </button>
       </div>

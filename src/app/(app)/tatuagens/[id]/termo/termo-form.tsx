@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { semLimpar } from "@/lib/formulario";
+import { semLimpar, useHidratado } from "@/lib/formulario";
 import { Assinatura } from "@/components/assinatura";
 import { TEXTO_IMAGEM, textoDoTermo } from "@/lib/termo";
 import { assinarTermo } from "./actions";
@@ -18,6 +18,7 @@ type Props = {
 };
 
 export function TermoForm(props: Props) {
+  const pronto = useHidratado();
   const [estado, acao, pendente] = useActionState(
     assinarTermo.bind(null, props.tatuagemId, props.de),
     undefined,
@@ -114,7 +115,7 @@ export function TermoForm(props: Props) {
 
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
 
-      <button type="submit" className="botao py-3" disabled={pendente}>
+      <button type="submit" className="botao py-3" disabled={pendente || !pronto}>
         {pendente ? "Salvando..." : "Confirmar assinatura"}
       </button>
     </form>

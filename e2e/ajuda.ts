@@ -9,7 +9,8 @@ export function nomeUnico(nome: string): string {
 
 /** Uma data futura sorteada, para não bater com sessões de outras execuções. */
 export function dataSorteada(): string {
-  const ano = 2031 + Math.floor(Math.random() * 20);
+  // Faixa larga (séculos) para dois testes quase nunca caírem no mesmo dia e horário.
+  const ano = 2100 + Math.floor(Math.random() * 900);
   const mes = 1 + Math.floor(Math.random() * 12);
   const dia = 1 + Math.floor(Math.random() * 28);
   return `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
