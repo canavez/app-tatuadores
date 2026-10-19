@@ -92,6 +92,7 @@ test("sessão cancelada não entra no a receber", async ({ page }) => {
     valor: "350",
   });
   await expect(page.getByText("falta R$ 350,00")).toBeVisible();
+  await page.locator('summary[aria-label="Mais ações"]').click();
   await page.getByRole("button", { name: "Cancelar sessão" }).click();
   await expect(page.getByText("Cancelado", { exact: true })).toBeVisible();
   await expect(page.getByText("R$ 0,00 pago")).toBeVisible();

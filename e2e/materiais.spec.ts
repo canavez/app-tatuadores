@@ -28,11 +28,12 @@ test("concluir a sessão registra os cartuchos usados e desconta do estoque", as
   const cliente = nomeUnico("Tom");
   await criarCliente(page, cliente);
   await agendar(page, { cliente, data: dataSorteada(), inicio: "13:00", fim: "15:00", novaTatuagem: "Rosa" });
-  await page.getByRole("button", { name: "Sinal pago / confirmar" }).click();
+  await page.locator('summary[aria-label="Mais ações"]').click();
+  await page.getByRole("button", { name: "Confirmar sem sinal" }).click();
   const urlSessao = page.url();
 
-  // Marcar como realizada abre a tela de materiais.
-  await page.getByRole("link", { name: "Marcar como realizada" }).click();
+  // Concluir abre a tela de materiais.
+  await page.getByRole("link", { name: "Concluir sessão" }).click();
   await expect(page.getByRole("heading", { name: "Sessão realizada" })).toBeVisible();
   // Itens zerados no estoque não aparecem.
   await expect(page.getByText(zerado)).toHaveCount(0);
@@ -55,6 +56,7 @@ test("concluir a sessão registra os cartuchos usados e desconta do estoque", as
 
   // Excluir a sessão devolve o que foi usado.
   await page.goto(urlSessao);
+  await page.locator('summary[aria-label="Mais ações"]').click();
   await page.getByRole("button", { name: "Excluir sessão" }).click();
   await page.getByRole("button", { name: "Sim, excluir" }).click();
   await expect(page).toHaveURL(/\/agenda$/);
@@ -65,8 +67,9 @@ test("dá para pular os materiais ao concluir", async ({ page }) => {
   const cliente = nomeUnico("Ugo");
   await criarCliente(page, cliente);
   await agendar(page, { cliente, data: dataSorteada(), inicio: "16:00", fim: "17:00", novaTatuagem: "Lua" });
-  await page.getByRole("button", { name: "Sinal pago / confirmar" }).click();
-  await page.getByRole("link", { name: "Marcar como realizada" }).click();
+  await page.locator('summary[aria-label="Mais ações"]').click();
+  await page.getByRole("button", { name: "Confirmar sem sinal" }).click();
+  await page.getByRole("link", { name: "Concluir sessão" }).click();
   await expect(page.getByRole("heading", { name: "Sessão realizada" })).toBeVisible();
   await page.getByRole("button", { name: /^(Pular|Concluir sessão)$/ }).click();
   await expect(page.getByText("Realizado", { exact: true })).toBeVisible();

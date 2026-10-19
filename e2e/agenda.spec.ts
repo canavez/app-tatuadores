@@ -117,8 +117,12 @@ test("fluxo de status: confirmar, cancelar libera horário, reativar dá conflit
   await expect(page.getByRole("heading", { name: "09:00 – 11:00" })).toBeVisible();
   const urlPrimeira = page.url();
 
-  await page.getByRole("button", { name: "Sinal pago / confirmar" }).click();
+  await page.locator('summary[aria-label="Mais ações"]').click();
+
+  await page.getByRole("button", { name: "Confirmar sem sinal" }).click();
   await expect(page.getByText("Confirmado", { exact: true })).toBeVisible();
+
+  await page.locator('summary[aria-label="Mais ações"]').click();
 
   await page.getByRole("button", { name: "Cancelar sessão" }).click();
   await expect(page.getByText("Cancelado", { exact: true })).toBeVisible();
@@ -168,6 +172,8 @@ test("editar sessão muda o horário e excluir remove", async ({ page }) => {
   await page.getByLabel("Término").fill("20:30");
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByRole("heading", { name: "18:00 – 20:30" })).toBeVisible();
+
+  await page.locator('summary[aria-label="Mais ações"]').click();
 
   await page.getByRole("button", { name: "Excluir sessão" }).click();
   await page.getByRole("button", { name: "Sim, excluir" }).click();
