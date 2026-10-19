@@ -6,6 +6,7 @@ import { semLimpar } from "@/lib/formulario";
 import { STATUS, type Tatuagem } from "@/lib/agenda";
 import { reaisParaCampo } from "@/lib/financeiro";
 import { salvarSessao } from "./actions";
+import { CampoHorario } from "./campo-horario";
 
 type Props = {
   clientes: { id: string; nome: string }[];
@@ -23,9 +24,20 @@ type Props = {
   };
   clienteInicial?: string;
   dataInicial?: string;
+  /** Vindo de um horário livre da agenda. */
+  inicioInicial?: string;
+  fimInicial?: string;
 };
 
-export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataInicial }: Props) {
+export function SessaoForm({
+  clientes,
+  tatuagens,
+  sessao,
+  clienteInicial,
+  dataInicial,
+  inicioInicial,
+  fimInicial,
+}: Props) {
   const [estado, acao, pendente] = useActionState(
     salvarSessao.bind(null, sessao?.id ?? null),
     undefined,
@@ -111,20 +123,12 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className="campo">
-          Data *
-          <input name="data" type="date" required defaultValue={sessao?.data ?? dataInicial} />
-        </label>
-        <label className="campo">
-          Início *
-          <input name="hora_inicio" type="time" required defaultValue={sessao?.hora_inicio} />
-        </label>
-        <label className="campo">
-          Término *
-          <input name="hora_fim" type="time" required defaultValue={sessao?.hora_fim} />
-        </label>
-      </div>
+      <CampoHorario
+        data={sessao?.data ?? dataInicial}
+        inicio={sessao?.hora_inicio ?? inicioInicial}
+        fim={sessao?.hora_fim}
+        fimLivre={sessao ? undefined : fimInicial}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="campo">
@@ -139,16 +143,21 @@ export function SessaoForm({ clientes, tatuagens, sessao, clienteInicial, dataIn
             Cobra pelo projeto? Coloque o total na primeira sessão e 0 nas outras.
           </span>
         </label>
-      <label className="campo">
-        Status
-        <select name="status" defaultValue={sessao?.status ?? "agendado"}>
-          {Object.entries(STATUS).map(([valor, { rotulo }]) => (
-            <option key={valor} value={valor}>
-              {rotulo}
-            </option>
-          ))}
-        </select>
-      </label>
+        {/* Sessão nova sempre começa aguardando sinal; o status só muda na edição. */}
+        {sessao ? (
+          <label className="campo">
+            Status
+            <select name="status" defaultValue={sessao.status}>
+              {Object.entries(STATUS).map(([valor, { rotulo }]) => (
+                <option key={valor} value={valor}>
+                  {rotulo}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <input type="hidden" name="status" value="agendado" />
+        )}
       </div>
 
       <label className="campo">

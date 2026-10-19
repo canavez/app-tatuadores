@@ -6,6 +6,7 @@ import {
   diaDaSemanaCurto,
   hoje,
   inicioDaSemana,
+  linhaDoTempo,
   mesAno,
   nomeDoDia,
   paraInstante,
@@ -15,6 +16,7 @@ import {
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao } from "@/components/card-sessao";
+import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
 
 export default async function AgendaPage({ searchParams }: PageProps<"/agenda">) {
@@ -26,18 +28,26 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
 
   // Busca a semana inteira para marcar os dias que têm sessão.
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("sessoes")
-    .select(SELECT_SESSAO_COMPLETA)
-    .gte("inicio", paraInstante(segunda, "00:00"))
-    .lt("inicio", paraInstante(somarDias(segunda, 7), "00:00"))
-    .order("inicio");
+  const [{ data, error }, config] = await Promise.all([
+    supabase
+      .from("sessoes")
+      .select(SELECT_SESSAO_COMPLETA)
+      .gte("inicio", paraInstante(segunda, "00:00"))
+      .lt("inicio", paraInstante(somarDias(segunda, 7), "00:00"))
+      .order("inicio"),
+    buscarConfiguracoes(),
+  ]);
   const sessoes = (data ?? []) as unknown as SessaoCompleta[];
 
   const diasComSessao = new Set(
     sessoes.filter((s) => s.status !== "cancelado").map((s) => partesLocais(s.inicio).data),
   );
   const doDia = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
+  const linha = linhaDoTempo(doDia, dia, { inicio: config.hora_inicio, fim: config.hora_fim });
+  const canceladas = doDia.filter((s) => s.status === "cancelado");
+  const ativas = doDia.length - canceladas.length;
+  const minutosLivres = linha.reduce((t, i) => (i.tipo === "livre" ? t + i.minutos : t), 0);
+  const horasLivres = minutosLivres >= 60 ? `${Math.floor(minutosLivres / 60)} h${minutosLivres % 60 ? ` ${minutosLivres % 60} min` : ""}` : `${minutosLivres} min`;
 
   return (
     <>
@@ -108,29 +118,55 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
 
       <h2 className="mb-3 mt-6 text-sm font-semibold text-muted first-letter:uppercase">
         {nomeDoDia(dia)}
-        {doDia.length > 0 && ` · ${doDia.length} ${doDia.length === 1 ? "sessão" : "sessões"}`}
+        {ativas > 0 && ` · ${ativas} ${ativas === 1 ? "sessão" : "sessões"}`}
+        {minutosLivres > 0 && ` · ${horasLivres} livres`}
       </h2>
 
       {error && <p className="aviso-erro">Erro ao carregar a agenda.</p>}
 
-      {!error && doDia.length === 0 && (
-        <div className="card flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-muted">Dia livre</p>
-          <Link href={`/agenda/nova?data=${dia}`} className="botao-secundario">
-            Agendar neste dia
-          </Link>
+      {!error && linha.length === 0 && (
+        <div className="card py-10 text-center text-muted">
+          {dia < diaHoje ? "Nenhuma sessão neste dia." : "Sem horário livre neste dia."}
         </div>
       )}
 
+      {/* Linha do tempo: sessões com altura pela duração e os horários livres entre elas. */}
       <ul className="flex flex-col gap-2">
-        {doDia.map((s) => (
-          <li key={s.id}>
-            <CardSessao sessao={s} />
-          </li>
-        ))}
+        {linha.map((item) =>
+          item.tipo === "sessao" ? (
+            <li key={item.sessao.id}>
+              <CardSessao sessao={item.sessao} minutos={item.minutos} />
+            </li>
+          ) : (
+            <li key={`livre-${item.inicio}`}>
+              <Link
+                href={`/agenda/nova?data=${dia}&inicio=${item.inicio}&fim=${item.fim}`}
+                className="flex items-center gap-3 rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted transition hover:border-accent/50 hover:text-foreground active:scale-[0.99]"
+              >
+                <Plus className="size-4 shrink-0" />
+                <span>
+                  Livre · <span className="tabular-nums">{item.inicio} – {item.fim}</span>
+                </span>
+              </Link>
+            </li>
+          ),
+        )}
       </ul>
 
-      {doDia.length > 0 && (
+      {canceladas.length > 0 && (
+        <section className="mt-5 flex flex-col gap-2">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Canceladas</h3>
+          <ul className="flex flex-col gap-2">
+            {canceladas.map((s) => (
+              <li key={s.id}>
+                <CardSessao sessao={s} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {dia >= diaHoje && (
         <Link
           href={`/agenda/nova?data=${dia}`}
           className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-4 text-sm font-medium text-muted transition hover:bg-surface hover:text-foreground active:scale-[0.99]"

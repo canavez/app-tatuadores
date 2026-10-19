@@ -4,7 +4,8 @@ import { SessaoForm } from "../sessao-form";
 import { opcoesDoFormulario } from "../dados";
 
 export default async function NovaSessaoPage({ searchParams }: PageProps<"/agenda/nova">) {
-  const { cliente, data } = await searchParams;
+  const { cliente, data, inicio, fim } = await searchParams;
+  const hora = (v: unknown) => (typeof v === "string" && /^\d{2}:\d{2}$/.test(v) ? v : undefined);
   const { clientes, tatuagens } = await opcoesDoFormulario();
 
   return (
@@ -15,6 +16,8 @@ export default async function NovaSessaoPage({ searchParams }: PageProps<"/agend
         tatuagens={tatuagens}
         clienteInicial={typeof cliente === "string" ? cliente : undefined}
         dataInicial={dataValida(data) ? data : undefined}
+        inicioInicial={hora(inicio)}
+        fimInicial={hora(fim)}
       />
     </>
   );

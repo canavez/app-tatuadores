@@ -43,6 +43,7 @@ export async function agendar(
   if (opcoes.valor) await page.getByLabel("Valor da sessão").fill(opcoes.valor);
   await page.getByLabel("Data").fill(opcoes.data);
   await page.getByLabel("Início").fill(opcoes.inicio);
+  await page.getByText("Outra", { exact: true }).click();
   await page.getByLabel("Término").fill(opcoes.fim);
   await page.getByRole("button", { name: "Salvar" }).click();
 }

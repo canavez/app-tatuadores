@@ -111,3 +111,58 @@ export function linkLembrete(
     `${nomeDoDia(data)}, às ${hora}. Qualquer dúvida é só chamar!`;
   return `${linkWhatsApp(telefone)}?text=${encodeURIComponent(texto)}`;
 }
+
+/** "14:30" ou "14:30:00" → minutos desde a meia-noite. */
+export function minutosDoDia(hora: string): number {
+  const [h, m] = hora.split(":").map(Number);
+  return h * 60 + m;
+}
+
+/** Minutos desde a meia-noite → "14:30". */
+export function horaDeMinutos(minutos: number): string {
+  return `${String(Math.floor(minutos / 60)).padStart(2, "0")}:${String(minutos % 60).padStart(2, "0")}`;
+}
+
+/** Minutos desde a meia-noite (horário de Brasília) de um instante. */
+function minutosDoInstante(instante: string | Date): number {
+  return minutosDoDia(partesLocais(instante).hora);
+}
+
+export type ItemLinhaDoTempo<S> =
+  | { tipo: "sessao"; sessao: S; minutos: number }
+  | { tipo: "livre"; inicio: string; fim: string; minutos: number };
+
+/**
+ * Monta o dia como linha do tempo: as sessões (menos as canceladas) em ordem e,
+ * entre elas, os horários livres de pelo menos 30 min dentro do horário de trabalho.
+ * Dias passados não mostram horário livre; hoje, só a partir de agora.
+ */
+export function linhaDoTempo<S extends { inicio: string; fim: string; status: StatusSessao }>(
+  sessoes: S[],
+  dia: string,
+  horario: { inicio: string; fim: string },
+): ItemLinhaDoTempo<S>[] {
+  const diaHoje = hoje();
+  const mostraLivre = dia >= diaHoje;
+  let cursor = minutosDoDia(horario.inicio);
+  if (dia === diaHoje) cursor = Math.max(cursor, Math.ceil(minutosDoInstante(new Date()) / 30) * 30);
+  const fechamento = minutosDoDia(horario.fim);
+
+  const itens: ItemLinhaDoTempo<S>[] = [];
+  const livre = (de: number, ate: number) => {
+    if (mostraLivre && ate - de >= 30) {
+      itens.push({ tipo: "livre", inicio: horaDeMinutos(de), fim: horaDeMinutos(ate), minutos: ate - de });
+    }
+  };
+
+  for (const s of sessoes.filter((s) => s.status !== "cancelado")) {
+    const inicio = minutosDoInstante(s.inicio);
+    // Sessão que passa da meia-noite termina, para a linha do tempo, no fim do dia.
+    const fim = partesLocais(s.fim).data === dia ? minutosDoInstante(s.fim) : 24 * 60;
+    livre(cursor, Math.min(inicio, fechamento));
+    itens.push({ tipo: "sessao", sessao: s, minutos: fim - inicio });
+    cursor = Math.max(cursor, fim);
+  }
+  livre(cursor, fechamento);
+  return itens;
+}

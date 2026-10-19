@@ -22,10 +22,12 @@ export type SessaoDoCard = {
 };
 
 /** Card de uma sessão na lista do dia: horário, cliente, tatuagem, status e valor. */
-export function CardSessao({ sessao: s }: { sessao: SessaoDoCard }) {
+export function CardSessao({ sessao: s, minutos }: { sessao: SessaoDoCard; minutos?: number }) {
   return (
     <Link
       href={`/agenda/${s.id}`}
+      // Na linha do tempo, a altura acompanha a duração da sessão.
+      style={minutos ? { minHeight: Math.min(Math.max(minutos * 0.8, 64), 260) } : undefined}
       className={`card flex items-stretch gap-3 p-3 transition active:scale-[0.99] ${
         s.status === "cancelado" ? "opacity-60" : ""
       }`}

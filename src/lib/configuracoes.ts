@@ -6,7 +6,7 @@ export async function buscarConfiguracoes(): Promise<Configuracoes> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("configuracoes")
-    .select("taxa_debito, taxa_credito, taxa_pix, modelo, comissao_estudio, contas_fixas")
+    .select("taxa_debito, taxa_credito, taxa_pix, modelo, comissao_estudio, contas_fixas, hora_inicio, hora_fim")
     .maybeSingle();
   return (data as Configuracoes | null) ?? SEM_CONFIGURACAO;
 }

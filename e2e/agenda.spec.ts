@@ -59,6 +59,7 @@ test("cadastra cliente novo direto no agendamento", async ({ page }) => {
   await page.getByLabel("Descrição").fill("Borboleta");
   await page.getByLabel("Data").fill(data);
   await page.getByLabel("Início").fill("13:00");
+  await page.getByText("Outra", { exact: true }).click();
   await page.getByLabel("Término").fill("14:00");
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByRole("heading", { name: "13:00 – 14:00" })).toBeVisible();
@@ -84,6 +85,7 @@ test("conflito ao agendar cliente novo não deixa cliente órfão", async ({ pag
   await page.getByLabel("Descrição").fill("Sol");
   await page.getByLabel("Data").fill(data);
   await page.getByLabel("Início").fill("11:00");
+  await page.getByText("Outra", { exact: true }).click();
   await page.getByLabel("Término").fill("13:00");
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText(CONFLITO)).toBeVisible();
@@ -139,6 +141,8 @@ test("sessão mostra anamnese e lembrete de WhatsApp", async ({ page }) => {
   await page.getByLabel("Telefone").fill("(21) 98888-7777");
   await page.getByLabel("Usa anticoagulante").check();
   await page.getByRole("button", { name: "Salvar" }).click();
+  // Espera salvar antes de sair da tela (senão o envio é interrompido).
+  await expect(page.getByRole("heading", { name: cliente })).toBeVisible();
 
   const data = dataSorteada();
   await agendar(page, { cliente, data, inicio: "13:00", fim: "15:00", novaTatuagem: "Âncora" });
@@ -160,6 +164,7 @@ test("editar sessão muda o horário e excluir remove", async ({ page }) => {
   await page.getByRole("link", { name: "Editar" }).click();
   await expect(page.getByLabel("Início")).toHaveValue("18:00");
   await expect(page.getByLabel("Data")).toHaveValue(data);
+  await page.getByText("Outra", { exact: true }).click();
   await page.getByLabel("Término").fill("20:30");
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByRole("heading", { name: "18:00 – 20:30" })).toBeVisible();

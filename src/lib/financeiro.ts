@@ -106,6 +106,9 @@ export type Configuracoes = {
   comissao_estudio: number;
   /** Soma das contas fixas do mês (aluguel, água, luz, internet...), em reais. */
   contas_fixas: number;
+  /** Horário de trabalho ("09:00:00"), usado na linha do tempo da agenda. */
+  hora_inicio: string;
+  hora_fim: string;
 };
 
 export const SEM_CONFIGURACAO: Configuracoes = {
@@ -115,6 +118,8 @@ export const SEM_CONFIGURACAO: Configuracoes = {
   modelo: "comissao",
   comissao_estudio: 0,
   contas_fixas: 0,
+  hora_inicio: "09:00:00",
+  hora_fim: "20:00:00",
 };
 
 /** Lê um percentual digitado ("3,5", "3.5", "3,5%"). Vazio vale 0; inválido devolve null. */
