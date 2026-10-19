@@ -12,6 +12,8 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   retries: 0,
+  // O banco fica na nuvem: às vezes salvar e redirecionar passa de 5 s.
+  expect: { timeout: 10_000 },
   reporter: [["list"], ["html", { open: "never" }]],
   globalTeardown: "./e2e/limpeza.ts",
   use: {

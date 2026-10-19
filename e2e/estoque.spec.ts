@@ -35,11 +35,16 @@ test("escolhe itens prontos, ajusta quantidade e avisa quando está acabando", a
   await page.getByLabel("Estoque mínimo").fill("2");
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page).toHaveURL(/\/estoque$/);
-  const alerta = page.getByRole("region", { name: "Acabando" });
-  await expect(alerta.getByText(proprio)).toHaveCount(0);
+  const linha = page.getByRole("listitem").filter({ has: page.getByRole("link", { name: proprio }) });
+  await expect(linha).not.toContainText("Acabando");
 
   await page.getByRole("button", { name: `Tirar 1 de ${proprio}` }).click();
-  await expect(alerta).toContainText(`${proprio} (2)`);
+  await expect(linha).toContainText("Acabando · mínimo 2");
+
+  // O filtro "Acabando" mostra só os itens que chegaram no mínimo.
+  await page.getByRole("link", { name: "Acabando", exact: true }).click();
+  await expect(page.getByRole("link", { name: proprio })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Batoque G" })).toHaveCount(0);
 
   await page.goto("/hoje");
   await expect(page.getByRole("link", { name: new RegExp(`Acabando: ${escapar(proprio)}`) })).toBeVisible();
