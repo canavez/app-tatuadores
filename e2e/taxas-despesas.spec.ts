@@ -54,12 +54,12 @@ test("taxa da maquininha fica no pagamento e entra no resultado com comissão e 
   await expect(page.getByText("Taxa da maquininha R$ 50,00 · sobra R$ 950,00")).toBeVisible();
 
   const despesa = `${PREFIXO} Tintas ${Date.now().toString(36)}`;
-  await page.goto("/financeiro");
-  await page.getByRole("link", { name: "Despesa" }).click();
+  await page.goto("/financeiro?aba=despesas");
+  await page.getByRole("link", { name: "Nova despesa" }).click();
   await page.getByLabel("Descrição").fill(despesa);
   await page.getByLabel("Valor").fill("120,50");
   await page.getByRole("button", { name: "Registrar" }).click();
-  await expect(page).toHaveURL(/\/financeiro\?mes=\d{4}-\d{2}$/);
+  await expect(page).toHaveURL(/\/financeiro\?mes=\d{4}-\d{2}&aba=despesas$/);
   await expect(page.getByRole("listitem").filter({ hasText: despesa })).toContainText("R$ 120,50");
   await expect(page.getByRole("listitem").filter({ hasText: despesa })).toContainText("Material");
 
@@ -70,7 +70,7 @@ test("taxa da maquininha fica no pagamento e entra no resultado com comissão e 
   // Estúdio próprio: no lugar da comissão entram as contas fixas.
   await salvarTaxas(page, { credito: "5", contasFixas: "1.800" });
   await expect(page).toHaveURL(/\/financeiro$/);
-  await page.goto("/financeiro");
+  await page.goto("/financeiro?aba=despesas");
   await expect(resultado.getByText("Contas fixas")).toBeVisible();
   await expect(resultado.getByText("− R$ 1.800,00")).toBeVisible();
   await expect(resultado.getByText("Comissão do estúdio")).toHaveCount(0);

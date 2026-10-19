@@ -98,7 +98,7 @@ test("sessão cancelada não entra no a receber", async ({ page }) => {
   await expect(page.getByText("R$ 0,00 pago")).toBeVisible();
   await expect(page.getByText("falta R$ 350,00")).toHaveCount(0);
 
-  await page.goto("/financeiro");
+  await page.goto("/financeiro?aba=areceber");
   await expect(page.getByText(cliente)).toHaveCount(0);
 });
 

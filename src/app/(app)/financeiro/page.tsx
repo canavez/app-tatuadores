@@ -41,7 +41,8 @@ function somarMeses(mes: string, n: number): string {
 }
 
 export default async function FinanceiroPage({ searchParams }: PageProps<"/financeiro">) {
-  const { mes: mesParam } = await searchParams;
+  const { mes: mesParam, aba: abaParam } = await searchParams;
+  const aba = abaParam === "despesas" || abaParam === "areceber" ? abaParam : "recebidos";
   const mesAtual = hoje().slice(0, 7);
   const mes = typeof mesParam === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(mesParam) ? mesParam : mesAtual;
 
@@ -102,12 +103,23 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
 
   const porForma = Object.entries(FORMAS)
     .map(([forma, rotulo]) => ({
+      forma,
       rotulo,
       total: somar(pagamentos.filter((p) => p.forma === forma).map((p) => p.valor)),
     }))
     .filter((f) => f.total > 0);
 
   const erro = doMes.error || abertas.error || despesasDoMes.error;
+  const custos = [
+    { rotulo: "Taxas da maquininha", valor: taxas },
+    {
+      rotulo: proprio ? "Contas fixas" : `Comissão do estúdio (${percentualComissao}%)`,
+      valor: custoEstudio,
+    },
+    { rotulo: "Despesas", valor: totalDespesas },
+  ].filter((c) => c.valor > 0);
+  const urlAba = (nova: string) =>
+    `/financeiro?${new URLSearchParams({ ...(mes !== mesAtual ? { mes } : {}), ...(nova !== "recebidos" ? { aba: nova } : {}) })}`;
 
   return (
     <>
@@ -148,54 +160,46 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
 
         {erro && <p className="aviso-erro">Erro ao carregar o financeiro.</p>}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card">
-            <p className="text-xs text-muted">Recebido no mês</p>
-            <p className="text-xl font-semibold tabular-nums text-green-700 dark:text-green-400">
-              {reais(recebido)}
-            </p>
-            {sinais > 0 && <p className="mt-1 text-xs text-muted tabular-nums">{reais(sinais)} em sinais</p>}
-          </div>
-          <div className="card">
-            <p className="text-xs text-muted">A receber</p>
-            <p className="text-xl font-semibold tabular-nums text-amber-700 dark:text-amber-400">
-              {reais(totalAReceber)}
-            </p>
-            <p className="mt-1 text-xs text-muted">de todas as sessões</p>
-          </div>
-        </div>
-
-        {porForma.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {porForma.map((f) => (
-              <span key={f.rotulo} className="rounded-full bg-surface px-3 py-1 text-xs tabular-nums">
-                {f.rotulo}: <span className="font-semibold">{reais(f.total)}</span>
-              </span>
-            ))}
-          </div>
-        )}
-
-        <section className="card flex flex-col gap-2 text-sm" aria-label="Resultado do mês">
-          <h2 className="mb-1 font-semibold">Resultado do mês</h2>
+        {/* Lucro do mês em destaque */}
+        <section
+          aria-label="Resultado do mês"
+          className="flex flex-col gap-2 rounded-2xl border border-accent/30 bg-surface-alto/40 p-4 text-sm"
+        >
+          <h2 className="text-xs font-medium text-violet-300">Lucro do mês</h2>
+          <p
+            className={`text-3xl font-semibold tabular-nums ${lucro < 0 ? "text-red-400" : "text-green-400"}`}
+          >
+            {reais(lucro)}
+          </p>
           <Linha rotulo="Recebido" valor={recebido} />
-          <Linha rotulo="Taxas da maquininha" valor={-taxas} />
-          <Linha
-            rotulo={
-              proprio
-                ? "Contas fixas"
-                : `Comissão do estúdio${custoEstudio > 0 ? ` (${percentualComissao}%)` : ""}`
-            }
-            valor={-custoEstudio}
-          />
-          <Linha rotulo="Despesas" valor={-totalDespesas} />
-          <div className="mt-1 flex items-center justify-between border-t border-border pt-2 text-base font-semibold">
-            <span>Lucro</span>
-            <span
-              className={`tabular-nums ${lucro < 0 ? "text-red-600 dark:text-red-400" : "text-green-700 dark:text-green-400"}`}
-            >
-              {reais(lucro)}
-            </span>
-          </div>
+          {sinais > 0 && <p className="-mt-1 text-xs text-muted tabular-nums">{reais(sinais)} em sinais</p>}
+          {custos.length === 0 ? (
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Custos</span>
+              <span className="text-muted">nenhum registrado</span>
+            </div>
+          ) : (
+            custos.map((c) => <Linha key={c.rotulo} rotulo={c.rotulo} valor={-c.valor} />)
+          )}
+
+          {porForma.length > 0 && (
+            <>
+              <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
+                {porForma.map((f) => (
+                  <div key={f.forma} className={COR_FORMA[f.forma]} style={{ width: `${(f.total / recebido) * 100}%` }} />
+                ))}
+              </div>
+              <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted tabular-nums">
+                {porForma.map((f) => (
+                  <span key={f.forma} className="flex items-center gap-1">
+                    <span className={`size-2 rounded-full ${COR_FORMA[f.forma]}`} />
+                    {f.rotulo} {reais(f.total)}
+                  </span>
+                ))}
+              </p>
+            </>
+          )}
+
           {semConfiguracao && (
             <p className="text-xs text-muted">
               Configure as taxas da maquininha e os custos do estúdio em{" "}
@@ -207,94 +211,129 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
           )}
         </section>
 
-        <h2 className="mt-2 text-sm font-semibold uppercase tracking-wide text-muted">
-          Recebimentos do mês
-        </h2>
-        {pagamentos.length === 0 ? (
-          <div className="card py-8 text-center text-sm text-muted">Nenhum pagamento neste mês.</div>
-        ) : (
-          <ul className="card divide-y divide-border p-0">
-            {pagamentos.map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/agenda/${p.sessao.id}`}
-                  className="flex items-center gap-3 px-4 py-3 active:bg-background"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{p.sessao.tatuagem.cliente.nome}</span>
-                    <span className="block truncate text-sm text-muted">
-                      {formatarData(p.data)} · {TIPOS[p.tipo]} · {FORMAS[p.forma]}
-                    </span>
-                  </span>
-                  <span className="font-semibold tabular-nums">{reais(Number(p.valor))}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="mt-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Despesas do mês</h2>
-          <Link href={`/financeiro/despesas/nova?mes=${mes}`} className="botao-secundario gap-1 py-1.5">
-            <Plus className="size-4" />
-            Despesa
+        <div className="grid grid-cols-2 gap-3">
+          <Link href={urlAba("areceber")} className="card active:scale-[0.99]">
+            <p className="text-xs text-muted">A receber</p>
+            <p className="text-lg font-semibold tabular-nums text-amber-400">{reais(totalAReceber)}</p>
+            <p className="text-xs text-muted">
+              {aReceber.length} {aReceber.length === 1 ? "sessão" : "sessões"}
+            </p>
+          </Link>
+          <Link href={urlAba("despesas")} className="card active:scale-[0.99]">
+            <p className="text-xs text-muted">Despesas</p>
+            <p className="text-lg font-semibold tabular-nums">{reais(totalDespesas)}</p>
+            <p className="text-xs text-muted">neste mês</p>
           </Link>
         </div>
-        {despesas.length === 0 ? (
-          <div className="card py-8 text-center text-sm text-muted">Nenhuma despesa neste mês.</div>
-        ) : (
-          <ul className="card divide-y divide-border p-0">
-            {despesas.map((d) => (
-              <li key={d.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{d.descricao}</span>
-                  <span className="block text-sm text-muted">
-                    {formatarData(d.data)} · {CATEGORIAS[d.categoria]}
-                  </span>
-                </span>
-                <span className="font-semibold tabular-nums">{reais(Number(d.valor))}</span>
-                <BotaoExcluir
-                  acao={excluirDespesa.bind(null, d.id, mes)}
-                  rotulo="Excluir"
-                  confirmacao={`Excluir a despesa "${d.descricao}"?`}
-                />
-              </li>
-            ))}
-          </ul>
+
+        {/* Abas */}
+        <nav aria-label="Listas do financeiro" className="grid grid-cols-3 gap-1 rounded-xl border border-border bg-surface p-1 text-sm">
+          {(
+            [
+              ["recebidos", "Recebidos"],
+              ["despesas", "Despesas"],
+              ["areceber", "A receber"],
+            ] as const
+          ).map(([valor, rotulo]) => (
+            <Link
+              key={valor}
+              href={urlAba(valor)}
+              aria-current={aba === valor ? "page" : undefined}
+              className={`rounded-lg py-2 text-center transition ${aba === valor ? "bg-surface-alto font-medium text-violet-200" : "text-muted hover:text-foreground"}`}
+            >
+              {rotulo}
+            </Link>
+          ))}
+        </nav>
+
+        {aba === "recebidos" &&
+          (pagamentos.length === 0 ? (
+            <div className="card py-8 text-center text-sm text-muted">Nenhum pagamento neste mês.</div>
+          ) : (
+            <ul className="card divide-y divide-border p-0">
+              {pagamentos.map((p) => (
+                <li key={p.id}>
+                  <Link href={`/agenda/${p.sessao.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-background">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{p.sessao.tatuagem.cliente.nome}</span>
+                      <span className="block truncate text-sm text-muted">
+                        {formatarData(p.data).slice(0, 5)} · {TIPOS[p.tipo]} · {FORMAS[p.forma]}
+                      </span>
+                    </span>
+                    <span className="font-semibold tabular-nums">{reais(Number(p.valor))}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ))}
+
+        {aba === "despesas" && (
+          <>
+            <Link href={`/financeiro/despesas/nova?mes=${mes}`} className="botao-secundario gap-2 py-2.5">
+              <Plus className="size-4" />
+              Nova despesa
+            </Link>
+            {despesas.length === 0 ? (
+              <div className="card py-8 text-center text-sm text-muted">Nenhuma despesa neste mês.</div>
+            ) : (
+              <ul className="card divide-y divide-border p-0">
+                {despesas.map((d) => (
+                  <li key={d.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{d.descricao}</span>
+                      <span className="block text-sm text-muted">
+                        {formatarData(d.data).slice(0, 5)} · {CATEGORIAS[d.categoria]}
+                      </span>
+                    </span>
+                    <span className="font-semibold tabular-nums">{reais(Number(d.valor))}</span>
+                    <BotaoExcluir
+                      acao={excluirDespesa.bind(null, d.id, mes)}
+                      rotulo="Excluir"
+                      confirmacao={`Excluir a despesa "${d.descricao}"?`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
 
-        <h2 className="mt-2 text-sm font-semibold uppercase tracking-wide text-muted">A receber</h2>
-        {aReceber.length === 0 ? (
-          <div className="card py-8 text-center text-sm text-muted">Nada pendente.</div>
-        ) : (
-          <ul className="card divide-y divide-border p-0">
-            {aReceber.map((s) => (
-              <li key={s.id}>
-                <Link
-                  href={`/agenda/${s.id}`}
-                  className="flex items-center gap-3 px-4 py-3 active:bg-background"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{s.tatuagem.cliente.nome}</span>
-                    <span className="block truncate text-sm text-muted">
-                      {formatarData(partesLocais(s.inicio).data)} · {s.tatuagem.descricao}
+        {aba === "areceber" &&
+          (aReceber.length === 0 ? (
+            <div className="card py-8 text-center text-sm text-muted">Nada pendente.</div>
+          ) : (
+            <ul className="card divide-y divide-border p-0">
+              {aReceber.map((s) => (
+                <li key={s.id}>
+                  <Link href={`/agenda/${s.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-background">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{s.tatuagem.cliente.nome}</span>
+                      <span className="block truncate text-sm text-muted">
+                        {formatarData(partesLocais(s.inicio).data).slice(0, 5)} · {s.tatuagem.descricao}
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-right">
-                    <span className="block font-semibold tabular-nums text-amber-700 dark:text-amber-400">
-                      {reais(s.falta)}
+                    <span className="text-right">
+                      <span className="block font-semibold tabular-nums text-amber-400">{reais(s.falta)}</span>
+                      <span className="block text-xs text-muted tabular-nums">de {reais(Number(s.valor))}</span>
                     </span>
-                    <span className="block text-xs text-muted tabular-nums">de {reais(Number(s.valor))}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ))}
       </div>
     </>
   );
 }
+
+// Cor de cada forma de pagamento na barrinha do lucro.
+const COR_FORMA: Record<string, string> = {
+  pix: "bg-violet-400",
+  dinheiro: "bg-emerald-400",
+  debito: "bg-sky-400",
+  credito: "bg-amber-400",
+  outro: "bg-zinc-400",
+};
 
 function Linha({ rotulo, valor }: { rotulo: string; valor: number }) {
   return (

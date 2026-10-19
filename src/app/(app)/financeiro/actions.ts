@@ -25,14 +25,14 @@ export async function registrarDespesa(_: EstadoForm, formData: FormData): Promi
 
   revalidatePath("/financeiro");
   // Volta para o mês da despesa.
-  redirect(`/financeiro?mes=${data.slice(0, 7)}`);
+  redirect(`/financeiro?mes=${data.slice(0, 7)}&aba=despesas`);
 }
 
 export async function excluirDespesa(id: string, mes: string) {
   const supabase = await createClient();
   await supabase.from("despesas").delete().eq("id", id);
   revalidatePath("/financeiro");
-  redirect(`/financeiro?mes=${mes}`);
+  redirect(`/financeiro?mes=${mes}&aba=despesas`);
 }
 
 export async function salvarTaxas(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
