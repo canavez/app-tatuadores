@@ -52,10 +52,8 @@ export function MenuSuperior() {
   return (
     <header className="sticky top-0 z-30 hidden print:hidden border-b border-border bg-surface/90 backdrop-blur md:block">
       <div className="mx-auto flex max-w-3xl items-center gap-8 px-6 py-3">
-        <Link href="/hoje" className="flex items-center gap-2 font-bold tracking-tight">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icone-192.png" alt="" className="size-7 rounded-lg" />
-          Ravenn
+        <Link href="/hoje" className="text-lg font-bold tracking-tight">
+          Ravenn<span className="text-accent">.</span>
         </Link>
         <nav aria-label="Menu principal" className="flex gap-1">
           {ABAS.map(({ href, rotulo, Icone }) => (

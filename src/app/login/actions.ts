@@ -55,3 +55,34 @@ export async function sair() {
   await supabase.auth.signOut({ scope: "local" });
   redirect("/login");
 }
+
+export async function pedirNovaSenha(_: EstadoLogin, formData: FormData): Promise<EstadoLogin> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { erro: "Informe o e-mail da sua conta." };
+
+  const origin = (await headers()).get("origin");
+  const supabase = await createClient();
+  // O link do e-mail passa pelo /auth/callback, que cria a sessão e leva para a tela de nova senha.
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?proximo=/conta/nova-senha`,
+  });
+  if (error?.status === 429) return { erro: "Muitos pedidos seguidos. Espere alguns minutos e tente de novo." };
+
+  // Mesmo se o e-mail não existir, a resposta é a mesma (não revela quem tem conta).
+  return { mensagem: "Se esse e-mail tiver conta no Ravenn, enviamos um link para criar uma nova senha." };
+}
+
+export async function trocarSenha(_: EstadoLogin, formData: FormData): Promise<EstadoLogin> {
+  const senha = String(formData.get("senha") ?? "");
+  const confirmacao = String(formData.get("confirmacao") ?? "");
+  if (senha.length < 8) return { erro: "A senha precisa ter pelo menos 8 caracteres." };
+  if (senha !== confirmacao) return { erro: "As duas senhas não são iguais." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: senha });
+  if (error) {
+    if (error.code === "same_password") return { erro: "Escolha uma senha diferente da atual." };
+    return { erro: "Não foi possível trocar a senha. Tente novamente." };
+  }
+  redirect("/conta?senha=ok");
+}

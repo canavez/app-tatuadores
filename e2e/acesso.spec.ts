@@ -26,6 +26,25 @@ test.describe("sem login", () => {
     await page.getByRole("button", { name: "Entrar" }).click();
     await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible();
   });
+
+  test("tela de esqueci minha senha abre pelo login e volta", async ({ page }) => {
+    // Não envia o e-mail de verdade (o Supabase limita poucos envios por hora).
+    await page.goto("/login");
+    await page.getByRole("link", { name: "Esqueci minha senha" }).click();
+    await expect(page.getByRole("heading", { name: "Esqueci minha senha" })).toBeVisible();
+    await expect(page.getByLabel("E-mail")).toBeVisible();
+    await page.getByRole("link", { name: "Voltar para o login" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+  });
+});
+
+test("trocar senha confere se as duas são iguais", async ({ page }) => {
+  await page.goto("/conta");
+  await page.getByRole("link", { name: /Trocar senha/ }).click();
+  await page.locator('input[name="senha"]').fill("senha-nova-123");
+  await page.getByLabel("Repita a nova senha").fill("senha-outra-456");
+  await page.getByRole("button", { name: "Salvar nova senha" }).click();
+  await expect(page.getByText("As duas senhas não são iguais.")).toBeVisible();
 });
 
 test.describe("navegador sem JavaScript (ex.: iPad antigo)", () => {

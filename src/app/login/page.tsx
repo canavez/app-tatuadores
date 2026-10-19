@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { semLimpar } from "@/lib/formulario";
 import { criarConta, entrar } from "./actions";
@@ -16,9 +17,10 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12 pt-[calc(env(safe-area-inset-top)+3rem)]">
       <div className="w-full max-w-sm">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icone-192.png" alt="" className="mx-auto mb-4 size-20 rounded-3xl shadow-lg" />
-        <h1 className="text-center text-3xl font-bold tracking-tight">Ravenn</h1>
+        {/* Enquanto a logo não está pronta, o nome escrito faz o papel dela. */}
+        <h1 className="text-center text-4xl font-bold tracking-tight">
+          Ravenn<span className="text-accent">.</span>
+        </h1>
         <p className="mt-2 text-center text-sm text-muted">
           Agenda, clientes e financeiro do seu estúdio
         </p>
@@ -47,6 +49,12 @@ export default function LoginPage() {
               autoComplete={criandoConta ? "new-password" : "current-password"}
             />
           </label>
+
+          {!criandoConta && (
+            <Link href="/login/recuperar" className="-mt-2 self-end text-sm text-muted underline">
+              Esqueci minha senha
+            </Link>
+          )}
 
           {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
           {estado?.mensagem && <p className="aviso-ok">{estado.mensagem}</p>}
