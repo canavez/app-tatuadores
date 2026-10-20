@@ -4,7 +4,8 @@ import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import { sair } from "@/app/login/actions";
 import { Topo } from "@/components/topo";
-import { Avatar } from "@/components/avatar";
+import { TrocarFoto } from "@/components/trocar-foto";
+import { linkDaFoto } from "@/lib/fotos";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { NomeForm } from "./nome-form";
 import { HorarioForm } from "./horario-form";
@@ -51,7 +52,11 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
         )}
         {exemplo === "apagado" && <p className="aviso-ok">Dados de exemplo apagados.</p>}
         <div className="flex items-center gap-4">
-          <Avatar nome={nome || user?.email || "?"} tamanho="grande" />
+          <TrocarFoto
+            nome={nome || user?.email || "?"}
+            fotoUrl={await linkDaFoto(user?.user_metadata?.foto as string | undefined)}
+            alvo="perfil"
+          />
           <div className="min-w-0">
             {nome && <p className="truncate text-xl font-semibold">{nome}</p>}
             <p className="truncate text-sm text-muted">{user?.email}</p>

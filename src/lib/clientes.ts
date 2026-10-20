@@ -7,6 +7,8 @@ export type Cliente = {
   cpf: string | null;
   data_nascimento: string | null;
   observacoes: string | null;
+  /** Caminho da foto no espaço "fotos" (null = sem foto). */
+  foto: string | null;
   criado_em: string;
 };
 

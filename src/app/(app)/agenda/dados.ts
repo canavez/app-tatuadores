@@ -6,7 +6,7 @@ import type { Pagamento } from "@/lib/financeiro";
 export type SessaoCompleta = Sessao & {
   pagamentos: Pagamento[];
   tatuagem: Tatuagem & {
-    cliente: { id: string; nome: string; telefone: string | null };
+    cliente: { id: string; nome: string; telefone: string | null; foto: string | null };
   };
 };
 
@@ -14,7 +14,7 @@ export const SELECT_SESSAO_COMPLETA =
   "id, tatuagem_id, inicio, fim, status, observacoes, valor, " +
   "pagamentos(id, sessao_id, valor, taxa, data, tipo, forma, observacoes), " +
   "tatuagem:tatuagens!inner(id, cliente_id, descricao, local_corpo, " +
-  "cliente:clientes!inner(id, nome, telefone))";
+  "cliente:clientes!inner(id, nome, telefone, foto))";
 
 export async function buscarSessao(id: string): Promise<SessaoCompleta> {
   const supabase = await createClient();

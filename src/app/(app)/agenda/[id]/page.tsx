@@ -16,6 +16,7 @@ import { formatarData } from "@/lib/clientes";
 import { alertas } from "@/lib/anamnese";
 import { STATUS, diaDaSemanaCurto, linkLembrete, nomeDoDia, partesLocais } from "@/lib/agenda";
 import { Avatar } from "@/components/avatar";
+import { linkDaFoto } from "@/lib/fotos";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { BotaoIcone, Topo } from "@/components/topo";
 import { ResumoAnamnese } from "@/components/resumo-anamnese";
@@ -89,7 +90,7 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
       <div className="flex flex-col gap-4">
         {/* Quem e quando */}
         <Link href={`/clientes/${cliente.id}`} className="flex items-center gap-3">
-          <Avatar nome={cliente.nome} tamanho="grande" />
+          <Avatar nome={cliente.nome} foto={await linkDaFoto(cliente.foto)} tamanho="grande" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-xl font-semibold">{cliente.nome}</span>
             <span className="block truncate text-sm text-muted">

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatarData, type Cliente } from "@/lib/clientes";
 import { diaDaSemanaCurto, partesLocais } from "@/lib/agenda";
 import { Avatar } from "@/components/avatar";
+import { linksDasFotos } from "@/lib/fotos";
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 
@@ -13,7 +14,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
   const busca = typeof q === "string" ? q.replace(/[,()%]/g, "").trim() : "";
 
   const supabase = await createClient();
-  let consulta = supabase.from("clientes").select("id, nome, telefone, instagram").order("nome");
+  let consulta = supabase.from("clientes").select("id, nome, telefone, instagram, foto").order("nome");
   if (busca) {
     consulta = consulta.or(
       `nome.ilike.%${busca}%,telefone.ilike.%${busca}%,instagram.ilike.%${busca}%`,
@@ -29,7 +30,8 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
       .neq("status", "cancelado")
       .order("inicio"),
   ]);
-  const clientes = (data ?? []) as Pick<Cliente, "id" | "nome" | "telefone" | "instagram">[];
+  const clientes = (data ?? []) as Pick<Cliente, "id" | "nome" | "telefone" | "instagram" | "foto">[];
+  const fotos = await linksDasFotos(clientes.map((c) => c.foto));
 
   // Próxima e última sessão de cada cliente, e o que falta para a próxima.
   type SessaoResumo = {
@@ -113,7 +115,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
                 href={`/clientes/${c.id}`}
                 className="flex items-center gap-3 px-4 py-3 active:bg-background"
               >
-                <Avatar nome={c.nome} />
+                <Avatar nome={c.nome} foto={c.foto ? fotos.get(c.foto) : null} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{c.nome}</span>
                   {prox ? (

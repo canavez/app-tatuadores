@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ESPACO_FOTOS } from "@/lib/fotos";
 import { CONDICOES, TEXTOS } from "@/lib/anamnese";
 
 export type EstadoForm = { erro?: string } | undefined;
@@ -67,6 +68,8 @@ export async function salvarCliente(
 
 export async function excluirCliente(id: string) {
   const supabase = await createClient();
+  const { data } = await supabase.from("clientes").select("foto").eq("id", id).maybeSingle();
+  if (data?.foto) await supabase.storage.from(ESPACO_FOTOS).remove([data.foto]);
   await supabase.from("clientes").delete().eq("id", id);
   revalidatePath("/clientes");
   redirect("/clientes");

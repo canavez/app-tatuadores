@@ -25,6 +25,7 @@ import { alertas, type Anamnese } from "@/lib/anamnese";
 import { reais, saldoSessao, somar } from "@/lib/financeiro";
 import { acabando, type ItemEstoque } from "@/lib/estoque";
 import { Topo } from "@/components/topo";
+import { linkDaFoto } from "@/lib/fotos";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao, type SessaoDoCard } from "@/components/card-sessao";
 import { ProximaSessao, type Pendencia } from "./proxima-sessao";
@@ -33,14 +34,14 @@ type SessaoDoDia = SessaoDoCard & {
   tatuagem_id: string;
   tatuagem: SessaoDoCard["tatuagem"] & {
     termos: { id: string } | { id: string }[] | null;
-    cliente: { id: string; nome: string; telefone: string | null; anamneses: Anamnese | Anamnese[] | null };
+    cliente: { id: string; nome: string; telefone: string | null; foto: string | null; anamneses: Anamnese | Anamnese[] | null };
   };
 };
 
 const SELECT =
   "id, tatuagem_id, inicio, fim, status, valor, pagamentos(valor), " +
   "tatuagem:tatuagens!inner(descricao, termos(id), " +
-  "cliente:clientes!inner(id, nome, telefone, anamneses(*)))";
+  "cliente:clientes!inner(id, nome, telefone, foto, anamneses(*)))";
 
 // O Supabase devolve relações 1:1 como objeto ou lista, conforme a relação.
 function um<T>(valor: T | T[] | null): T | null {
@@ -205,6 +206,7 @@ export default async function HojePage() {
             quando={quando(proxima, dia)}
             agoraMesmo={proxima.inicio <= agora}
             pendencias={pendenciasDa(proxima)}
+            fotoUrl={await linkDaFoto(proxima.tatuagem.cliente.foto)}
           />
         ) : (
           <div className="card flex flex-col items-center gap-3 py-8 text-center">

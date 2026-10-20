@@ -25,10 +25,11 @@ type Props = {
   quando: string;
   agoraMesmo: boolean;
   pendencias: Pendencia[];
+  fotoUrl?: string | null;
 };
 
 /** Destaque da próxima sessão na tela Hoje: quando, quem, o que falta e atalhos. */
-export function ProximaSessao({ sessao: s, quando, agoraMesmo, pendencias }: Props) {
+export function ProximaSessao({ sessao: s, quando, agoraMesmo, pendencias, fotoUrl }: Props) {
   const { cliente } = s.tatuagem;
   return (
     <section
@@ -40,7 +41,7 @@ export function ProximaSessao({ sessao: s, quando, agoraMesmo, pendencias }: Pro
         {agoraMesmo ? "Sessão agora" : "Próxima sessão"} · {quando}
       </p>
       <Link href={`/agenda/${s.id}`} className="flex items-center gap-3">
-        <Avatar nome={cliente.nome} />
+        <Avatar nome={cliente.nome} foto={fotoUrl} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-lg font-semibold">{cliente.nome}</span>
           <span className="block truncate text-sm text-muted">{s.tatuagem.descricao}</span>

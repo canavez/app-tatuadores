@@ -11,7 +11,8 @@ import { calcularIdade, formatarData, linkWhatsApp } from "@/lib/clientes";
 import { STATUS, diaDaSemanaCurto, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
 import { createClient } from "@/lib/supabase/server";
 import { reais, saldoSessao, somar } from "@/lib/financeiro";
-import { Avatar } from "@/components/avatar";
+import { TrocarFoto } from "@/components/trocar-foto";
+import { linkDaFoto } from "@/lib/fotos";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { BotaoIcone, Topo } from "@/components/topo";
 import { ResumoAnamnese } from "@/components/resumo-anamnese";
@@ -73,7 +74,7 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
-          <Avatar nome={cliente.nome} tamanho="grande" />
+          <TrocarFoto nome={cliente.nome} fotoUrl={await linkDaFoto(cliente.foto)} alvo={{ cliente: cliente.id }} />
           <div className="min-w-0">
             <h2 className="truncate text-xl font-semibold">{cliente.nome}</h2>
             <p className="text-sm text-muted">

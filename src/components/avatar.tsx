@@ -1,4 +1,4 @@
-// Círculo com as iniciais do nome; a cor é sempre a mesma para o mesmo nome.
+// Foto da pessoa ou, sem foto, círculo com as iniciais (a cor é sempre a mesma para o mesmo nome).
 const CORES = [
   "bg-rose-500/15 text-rose-700 dark:text-rose-300",
   "bg-amber-500/15 text-amber-700 dark:text-amber-300",
@@ -22,8 +22,23 @@ function corDoNome(nome: string): string {
   return CORES[soma % CORES.length];
 }
 
-export function Avatar({ nome, tamanho = "normal" }: { nome: string; tamanho?: "normal" | "grande" }) {
+export function Avatar({
+  nome,
+  foto,
+  tamanho = "normal",
+}: {
+  nome: string;
+  /** Link da foto; sem foto, mostra as iniciais. */
+  foto?: string | null;
+  tamanho?: "normal" | "grande";
+}) {
   const medidas = tamanho === "grande" ? "size-14 text-lg" : "size-10 text-sm";
+  if (foto) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={foto} alt={`Foto de ${nome}`} className={`shrink-0 rounded-full object-cover ${medidas}`} />
+    );
+  }
   return (
     <span
       aria-hidden
