@@ -53,7 +53,7 @@ export function AdicionarForm({ grupos }: Props) {
 
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
 
-      <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] flex justify-end gap-3 rounded-2xl bg-background/90 py-2 backdrop-blur md:bottom-4">
+      <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] flex justify-end gap-3 rounded-2xl bg-background py-2 md:bottom-4">
         <Link href="/estoque" className="botao-secundario">
           Cancelar
         </Link>

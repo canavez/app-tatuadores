@@ -246,7 +246,7 @@ export default async function SessaoPage({ params, searchParams }: PageProps<"/a
         </section>
 
         {/* Ação principal fixa + menu com as outras */}
-        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-10 -mx-4 flex gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:bottom-0 md:mx-0 md:rounded-2xl md:border">
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-10 -mx-4 flex gap-2 border-t border-border bg-background px-4 py-3 md:bottom-0 md:mx-0 md:rounded-2xl md:border">
           {sessao.status === "agendado" && (
             <Link href={`/agenda/${sessao.id}/pagamento`} className="botao flex-1 py-3">
               Registrar sinal
