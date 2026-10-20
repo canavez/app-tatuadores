@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Plus, Settings } from "lucide-react";
+import { ChartColumn, ChevronLeft, ChevronRight, Plus, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { hoje, mesAno, partesLocais } from "@/lib/agenda";
 import { formatarData } from "@/lib/clientes";
@@ -132,6 +132,9 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
                 Mês atual
               </Link>
             )}
+            <BotaoIcone href={`/financeiro/relatorio?ref=${mes}`} rotulo="Relatório">
+              <ChartColumn className="size-5" />
+            </BotaoIcone>
             <BotaoIcone href="/financeiro/configuracoes" rotulo="Taxas e custos">
               <Settings className="size-5" />
             </BotaoIcone>

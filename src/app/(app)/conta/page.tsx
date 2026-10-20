@@ -7,6 +7,7 @@ import { Avatar } from "@/components/avatar";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { NomeForm } from "./nome-form";
 import { HorarioForm } from "./horario-form";
+import { apagarDadosExemplo, gerarDadosExemplo } from "./exemplo-actions";
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
@@ -31,7 +32,7 @@ function LinhaLink({ href, Icone, titulo, detalhe }: { href: string; Icone: type
 }
 
 export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
-  const { senha } = await searchParams;
+  const { senha, exemplo } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -44,6 +45,10 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
       <Topo titulo="Conta" />
       <div className="flex flex-col gap-6">
         {senha === "ok" && <p className="aviso-ok">Senha trocada.</p>}
+        {exemplo === "gerado" && (
+          <p className="aviso-ok">Dados de exemplo criados. Veja a Agenda, o Financeiro e o Relatório.</p>
+        )}
+        {exemplo === "apagado" && <p className="aviso-ok">Dados de exemplo apagados.</p>}
         <div className="flex items-center gap-4">
           <Avatar nome={nome || user?.email || "?"} tamanho="grande" />
           <div className="min-w-0">
@@ -68,6 +73,26 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
             detalhe="Taxa da maquininha, comissão ou contas fixas"
           />
         </Secao>
+
+        {/* Só durante o desenvolvimento: preenche a conta com dados fictícios para testar. */}
+        {process.env.NODE_ENV !== "production" && (
+          <Secao titulo="Dados de exemplo (desenvolvimento)">
+            <div className="card flex flex-col gap-3 text-sm">
+              <p className="text-muted">
+                Cria 6 meses de clientes, sessões, sinais, pagamentos, taxas e despesas fictícios (todos com o
+                nome começando por &quot;Exemplo · &quot;), para testar o Financeiro e os relatórios.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <form action={gerarDadosExemplo}>
+                  <button type="submit" className="botao">Gerar dados de exemplo</button>
+                </form>
+                <form action={apagarDadosExemplo}>
+                  <button type="submit" className="botao-secundario">Apagar dados de exemplo</button>
+                </form>
+              </div>
+            </div>
+          </Secao>
+        )}
 
         <Secao titulo="Segurança">
           <LinhaLink
