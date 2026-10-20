@@ -27,17 +27,14 @@ test.describe("sem login", () => {
     await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible();
   });
 
-  test("botões de Google e Apple: avisam se ainda não estão ativados", async ({ page }) => {
+  test("botões de Google e Apple só aparecem quando ativados no Supabase", async ({ page, request }) => {
+    const resposta = await request.get(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+    });
+    const { external } = await resposta.json();
     await page.goto("/login");
-    for (const provedor of ["Google", "Apple"]) {
-      await page.goto("/login");
-      await page.getByRole("button", { name: `Continuar com ${provedor}` }).click();
-      // Desativado no Supabase: mostra o aviso. Ativado: sai do app para a tela do provedor.
-      await expect
-        .poll(async () =>
-          page.url().includes("localhost") ? await page.getByText(`O login com ${provedor} ainda não foi ativado`).count() : 1,
-        )
-        .toBeGreaterThan(0);
+    for (const [chave, nome] of [["google", "Google"], ["apple", "Apple"]]) {
+      await expect(page.getByRole("button", { name: `Continuar com ${nome}` })).toHaveCount(external[chave] ? 1 : 0);
     }
   });
 

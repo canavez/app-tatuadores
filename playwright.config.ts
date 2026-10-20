@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// E-mail e senha da conta de teste (arquivo fora do git).
+// Endereço do Supabase e e-mail/senha da conta de teste (arquivos fora do git).
+process.loadEnvFile(".env.local");
 process.loadEnvFile(".env.test.local");
 
 const PORTA = 3100;
