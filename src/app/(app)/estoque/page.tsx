@@ -94,7 +94,7 @@ export default async function EstoquePage({ searchParams }: PageProps<"/estoque"
                   aria-current={ativo === f.valor ? "page" : undefined}
                   className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition ${
                     ativo === f.valor
-                      ? "border-accent/50 bg-surface-alto font-medium text-violet-200"
+                      ? "border-accent/50 bg-surface-alto font-medium text-lavanda"
                       : `border-border ${f.cor ?? "text-muted"} hover:text-foreground`
                   }`}
                 >

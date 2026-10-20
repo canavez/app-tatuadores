@@ -73,7 +73,7 @@ export function CampoHorario({
                 onChange={() => setDuracao(d)}
                 className="peer sr-only"
               />
-              <span className="block rounded-full border border-border px-3.5 py-1.5 text-sm transition peer-checked:border-accent peer-checked:bg-accent/15 peer-checked:font-medium peer-checked:text-violet-200 peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
+              <span className="block rounded-full border border-border px-3.5 py-1.5 text-sm transition peer-checked:border-accent peer-checked:bg-accent/15 peer-checked:font-medium peer-checked:text-lavanda peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
                 {d === null ? "Outra" : rotulo(d)}
               </span>
             </label>
@@ -105,7 +105,7 @@ export function CampoHorario({
           />
           {fimCalculado !== null && (
             <p
-              className={`text-sm ${passaDaMeiaNoite ? "text-red-400" : "text-violet-300"}`}
+              className={`text-sm ${passaDaMeiaNoite ? "text-red-400" : "text-lavanda"}`}
             >
               {passaDaMeiaNoite
                 ? "Passa da meia-noite. Escolha outra duração."

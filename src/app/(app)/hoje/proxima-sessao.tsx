@@ -35,7 +35,7 @@ export function ProximaSessao({ sessao: s, quando, agoraMesmo, pendencias }: Pro
       aria-label="Próxima sessão"
       className="flex flex-col gap-3 rounded-2xl border border-accent/30 bg-surface-alto/40 p-4"
     >
-      <p className="flex items-center gap-1.5 text-xs font-medium text-violet-300">
+      <p className="flex items-center gap-1.5 text-xs font-medium text-lavanda">
         <Clock className="size-3.5" />
         {agoraMesmo ? "Sessão agora" : "Próxima sessão"} · {quando}
       </p>

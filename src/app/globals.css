@@ -4,16 +4,17 @@
    então as variantes dark: valem mesmo com o celular no modo claro. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Paleta Ravenn "Noite e violeta". */
+/* Paleta Ravenn "Noite e violeta", com o violeta e o lavanda da logo. */
 :root {
   color-scheme: dark;
   --background: #0b0b12;
   --surface: #15151f;
-  --surface-alto: #25204a;
+  --surface-alto: #24223d;
   --foreground: #eeeef7;
   --muted: #8e8ea8;
   --border: #24243a;
-  --accent: #8b7cf6;
+  --accent: #7f79b9;
+  --lavanda: #d4d0ea;
   --accent-foreground: #ffffff;
 }
 
@@ -26,6 +27,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-surface-alto: var(--surface-alto);
+  --color-lavanda: var(--lavanda);
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-dm-mono);
 }

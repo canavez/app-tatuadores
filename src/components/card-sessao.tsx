@@ -5,7 +5,7 @@ import { reais, saldoSessao } from "@/lib/financeiro";
 // Cor da barrinha lateral de cada sessão, conforme o status.
 const BARRA: Record<StatusSessao, string> = {
   agendado: "bg-amber-500",
-  confirmado: "bg-violet-400",
+  confirmado: "bg-accent",
   realizado: "bg-green-500",
   faltou: "bg-red-500",
   cancelado: "bg-zinc-400",

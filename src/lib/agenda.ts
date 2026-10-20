@@ -8,7 +8,7 @@ const DESLOCAMENTO_MS = -3 * 60 * 60 * 1000;
 
 export const STATUS = {
   agendado: { rotulo: "Aguardando sinal", cor: "bg-amber-500/15 text-amber-700 dark:text-amber-400" },
-  confirmado: { rotulo: "Confirmado", cor: "bg-surface-alto text-violet-300" },
+  confirmado: { rotulo: "Confirmado", cor: "bg-surface-alto text-lavanda" },
   realizado: { rotulo: "Realizado", cor: "bg-green-500/15 text-green-700 dark:text-green-400" },
   faltou: { rotulo: "Faltou", cor: "bg-red-500/15 text-red-700 dark:text-red-400" },
   cancelado: { rotulo: "Cancelado", cor: "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400 line-through" },

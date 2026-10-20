@@ -20,7 +20,7 @@ function Secao({ titulo, children }: { titulo: string; children: React.ReactNode
 function LinhaLink({ href, Icone, titulo, detalhe }: { href: string; Icone: typeof Wallet; titulo: string; detalhe: string }) {
   return (
     <Link href={href} className="card flex items-center gap-3 py-3 active:bg-background">
-      <Icone className="size-5 shrink-0 text-violet-300" />
+      <Icone className="size-5 shrink-0 text-lavanda" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm">{titulo}</span>
         <span className="block text-xs text-muted">{detalhe}</span>

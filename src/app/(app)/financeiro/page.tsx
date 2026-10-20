@@ -165,7 +165,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
           aria-label="Resultado do mês"
           className="flex flex-col gap-2 rounded-2xl border border-accent/30 bg-surface-alto/40 p-4 text-sm"
         >
-          <h2 className="text-xs font-medium text-violet-300">Lucro do mês</h2>
+          <h2 className="text-xs font-medium text-lavanda">Lucro do mês</h2>
           <p
             className={`text-3xl font-semibold tabular-nums ${lucro < 0 ? "text-red-400" : "text-green-400"}`}
           >
@@ -239,7 +239,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
               key={valor}
               href={urlAba(valor)}
               aria-current={aba === valor ? "page" : undefined}
-              className={`rounded-lg py-2 text-center transition ${aba === valor ? "bg-surface-alto font-medium text-violet-200" : "text-muted hover:text-foreground"}`}
+              className={`rounded-lg py-2 text-center transition ${aba === valor ? "bg-surface-alto font-medium text-lavanda" : "text-muted hover:text-foreground"}`}
             >
               {rotulo}
             </Link>
@@ -328,7 +328,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
 
 // Cor de cada forma de pagamento na barrinha do lucro.
 const COR_FORMA: Record<string, string> = {
-  pix: "bg-violet-400",
+  pix: "bg-accent",
   dinheiro: "bg-emerald-400",
   debito: "bg-sky-400",
   credito: "bg-amber-400",

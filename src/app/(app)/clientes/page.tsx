@@ -117,7 +117,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{c.nome}</span>
                   {prox ? (
-                    <span className="block truncate text-sm text-violet-300">Próxima: {curto(prox.inicio)}</span>
+                    <span className="block truncate text-sm text-lavanda">Próxima: {curto(prox.inicio)}</span>
                   ) : (
                     <span className="block truncate text-sm text-muted">
                       {ult ? `Última sessão ${formatarData(partesLocais(ult.inicio).data).slice(0, 5)}` : "Nenhuma sessão ainda"}
