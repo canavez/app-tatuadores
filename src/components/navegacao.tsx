@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, Package, Sun, UserRound, Users, Wallet, type LucideIcon } from "lucide-react";
@@ -52,8 +53,8 @@ export function MenuSuperior() {
   return (
     <header className="sticky top-0 z-30 hidden print:hidden border-b border-border bg-surface/90 backdrop-blur md:block">
       <div className="mx-auto flex max-w-3xl items-center gap-8 px-6 py-3">
-        <Link href="/hoje" className="text-lg font-bold tracking-tight">
-          Ravenn<span className="text-accent">.</span>
+        <Link href="/hoje">
+          <Image src="/logo.png" alt="Ravenn" width={640} height={203} className="h-7 w-auto" />
         </Link>
         <nav aria-label="Menu principal" className="flex gap-1">
           {ABAS.map(({ href, rotulo, Icone }) => (

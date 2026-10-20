@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { semLimpar } from "@/lib/formulario";
@@ -17,11 +18,10 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12 pt-[calc(env(safe-area-inset-top)+3rem)]">
       <div className="w-full max-w-sm">
-        {/* Enquanto a logo não está pronta, o nome escrito faz o papel dela. */}
-        <h1 className="text-center text-4xl font-bold tracking-tight">
-          Ravenn<span className="text-accent">.</span>
+        <h1>
+          <Image src="/logo.png" alt="Ravenn" width={640} height={203} priority className="mx-auto h-auto w-56" />
         </h1>
-        <p className="mt-2 text-center text-sm text-muted">
+        <p className="mt-4 text-center text-sm text-muted">
           Agenda, clientes e financeiro do seu estúdio
         </p>
 

@@ -14,7 +14,7 @@ test.describe("sem login", () => {
     const manifest = await request.get("/manifest.webmanifest");
     expect(manifest.ok()).toBe(true);
     expect((await manifest.json()).name).toBe("Ravenn");
-    for (const icone of ["/icone-192.png", "/icone-512.png", "/icon.svg", "/apple-icon.png"]) {
+    for (const icone of ["/icone-192.png", "/icone-512.png", "/icon.png", "/apple-icon.png"]) {
       expect((await request.get(icone)).ok(), icone).toBe(true);
     }
   });
