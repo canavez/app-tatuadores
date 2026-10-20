@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import type { Cliente } from "@/lib/clientes";
 
@@ -46,7 +47,7 @@ export async function buscarTatuagemETermo(id: string) {
   if (!tatuagem.data) notFound();
 
   const user = usuario.data.user;
-  const nome = user?.user_metadata?.nome as string | undefined;
+  const nome = nomeDoUsuario(user) || undefined;
   return {
     tatuagem: tatuagem.data as unknown as TatuagemDoTermo,
     termo: termo.data as Termo | null,

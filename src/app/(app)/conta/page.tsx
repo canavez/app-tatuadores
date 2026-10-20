@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, KeyRound, LogOut, Wallet } from "lucide-react";
+import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import { sair } from "@/app/login/actions";
 import { Topo } from "@/components/topo";
@@ -37,7 +38,7 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const nome = (user?.user_metadata?.nome as string | undefined) ?? "";
+  const nome = nomeDoUsuario(user);
   const config = await buscarConfiguracoes();
 
   return (

@@ -9,6 +9,7 @@ import {
   TriangleAlert,
   Wallet,
 } from "lucide-react";
+import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import {
   diaDaSemanaCurto,
@@ -161,7 +162,7 @@ export default async function HojePage() {
     supabase.auth.getUser(),
   ]);
   const sessoes = (data ?? []) as unknown as SessaoDoDia[];
-  const primeiroNome = ((usuario.data.user?.user_metadata?.nome as string | undefined) ?? "").split(" ")[0];
+  const primeiroNome = nomeDoUsuario(usuario.data.user).split(" ")[0];
 
   const deHoje = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
   const ativasHoje = deHoje.filter((s) => s.status !== "cancelado");

@@ -1,3 +1,4 @@
+import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import { hoje, partesLocais } from "@/lib/agenda";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
@@ -133,7 +134,7 @@ export async function montarRelatorio(periodo: Periodo) {
     ),
   );
 
-  const nomeTatuador = (usuario.data.user?.user_metadata?.nome as string | undefined) ?? usuario.data.user?.email ?? "";
+  const nomeTatuador = nomeDoUsuario(usuario.data.user) || usuario.data.user?.email || "";
 
   return {
     recebido,

@@ -86,3 +86,34 @@ export async function trocarSenha(_: EstadoLogin, formData: FormData): Promise<E
   }
   redirect("/conta?senha=ok");
 }
+
+const PROVEDORES = { google: "Google", apple: "Apple" } as const;
+
+/** Entrar com Google ou Apple: manda a pessoa para o provedor e volta pelo /auth/callback. */
+export async function entrarCom(_: EstadoLogin, formData: FormData): Promise<EstadoLogin> {
+  const provedor = formData.get("provedor");
+  if (provedor !== "google" && provedor !== "apple") return { erro: "Opção de login inválida." };
+  const nome = PROVEDORES[provedor];
+
+  // Confere se o provedor está ativado no Supabase (senão a pessoa cairia numa tela de erro técnica).
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  try {
+    const resposta = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: chave }, cache: "no-store" });
+    const config = (await resposta.json()) as { external?: Record<string, boolean> };
+    if (!config.external?.[provedor]) {
+      return { erro: `O login com ${nome} ainda não foi ativado. Entre com e-mail e senha por enquanto.` };
+    }
+  } catch {
+    return { erro: `Não foi possível falar com o ${nome} agora. Tente de novo.` };
+  }
+
+  const origin = (await headers()).get("origin");
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: provedor,
+    options: { redirectTo: `${origin}/auth/callback` },
+  });
+  if (error || !data.url) return { erro: `Não foi possível entrar com ${nome}. Tente de novo.` };
+  redirect(data.url);
+}

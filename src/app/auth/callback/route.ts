@@ -15,5 +15,6 @@ export async function GET(request: NextRequest) {
     if (!error) return NextResponse.redirect(`${origin}${destino}`);
   }
 
-  return NextResponse.redirect(`${origin}/login`);
+  // Login cancelado ou recusado no Google/Apple, ou link vencido.
+  return NextResponse.redirect(`${origin}/login?erro=login`);
 }
