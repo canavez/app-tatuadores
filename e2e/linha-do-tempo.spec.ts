@@ -29,3 +29,26 @@ test("dia em linha do tempo: horário livre abre a nova sessão já preenchida",
   await expect(page.getByRole("link", { name: "Livre · 15:00 – 20:00" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Livre · 12:00/ })).toHaveCount(0);
 });
+
+test("arrastar a faixa da semana troca de semana", async ({ page }) => {
+  await page.goto("/agenda?dia=2026-10-14");
+  const faixa = page.getByRole("link", { name: /quarta-feira, 14 de outubro/i });
+  const caixa = (await faixa.boundingBox())!;
+  const y = caixa.y + caixa.height / 2;
+
+  // Para a esquerda: próxima semana.
+  await page.mouse.move(caixa.x + caixa.width / 2, y);
+  await page.mouse.down();
+  await page.mouse.move(caixa.x + caixa.width / 2 - 60, y, { steps: 5 });
+  await page.mouse.move(caixa.x + caixa.width / 2 - 140, y, { steps: 5 });
+  await page.mouse.up();
+  await expect(page).toHaveURL(/dia=2026-10-21$/);
+
+  // Para a direita: volta.
+  await page.mouse.move(caixa.x + caixa.width / 2, y);
+  await page.mouse.down();
+  await page.mouse.move(caixa.x + caixa.width / 2 + 60, y, { steps: 5 });
+  await page.mouse.move(caixa.x + caixa.width / 2 + 140, y, { steps: 5 });
+  await page.mouse.up();
+  await expect(page).toHaveURL(/dia=2026-10-14$/);
+});

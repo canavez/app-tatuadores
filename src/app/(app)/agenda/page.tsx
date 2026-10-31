@@ -16,10 +16,13 @@ import {
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao } from "@/components/card-sessao";
+import { ArrastarSemana } from "./arrastar-semana";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
 
-export default async function AgendaPage({ searchParams }: PageProps<"/agenda">) {
+export default async function AgendaPage({
+  searchParams,
+}: PageProps<"/agenda">) {
   const { dia: diaParam } = await searchParams;
   const diaHoje = hoje();
   const dia = dataValida(diaParam) ? diaParam : diaHoje;
@@ -40,14 +43,25 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
   const sessoes = (data ?? []) as unknown as SessaoCompleta[];
 
   const diasComSessao = new Set(
-    sessoes.filter((s) => s.status !== "cancelado").map((s) => partesLocais(s.inicio).data),
+    sessoes
+      .filter((s) => s.status !== "cancelado")
+      .map((s) => partesLocais(s.inicio).data),
   );
   const doDia = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
-  const linha = linhaDoTempo(doDia, dia, { inicio: config.hora_inicio, fim: config.hora_fim });
+  const linha = linhaDoTempo(doDia, dia, {
+    inicio: config.hora_inicio,
+    fim: config.hora_fim,
+  });
   const canceladas = doDia.filter((s) => s.status === "cancelado");
   const ativas = doDia.length - canceladas.length;
-  const minutosLivres = linha.reduce((t, i) => (i.tipo === "livre" ? t + i.minutos : t), 0);
-  const horasLivres = minutosLivres >= 60 ? `${Math.floor(minutosLivres / 60)} h${minutosLivres % 60 ? ` ${minutosLivres % 60} min` : ""}` : `${minutosLivres} min`;
+  const minutosLivres = linha.reduce(
+    (t, i) => (i.tipo === "livre" ? t + i.minutos : t),
+    0,
+  );
+  const horasLivres =
+    minutosLivres >= 60
+      ? `${Math.floor(minutosLivres / 60)} h${minutosLivres % 60 ? ` ${minutosLivres % 60} min` : ""}`
+      : `${minutosLivres} min`;
 
   return (
     <>
@@ -71,42 +85,51 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
         >
           <ChevronLeft className="size-5" />
         </Link>
-        <ol className="grid flex-1 grid-cols-7 gap-1">
-          {dias.map((d) => {
-            const selecionado = d === dia;
-            const ehHoje = d === diaHoje;
-            return (
-              <li key={d}>
-                <Link
-                  href={`/agenda?dia=${d}`}
-                  aria-label={nomeDoDia(d)}
-                  aria-current={selecionado ? "date" : undefined}
-                  className={`flex flex-col items-center rounded-2xl py-2 transition ${
-                    selecionado
-                      ? "bg-accent text-accent-foreground"
-                      : ehHoje
-                        ? "text-accent"
-                        : "hover:bg-surface"
-                  }`}
-                >
-                  <span className={`text-[11px] uppercase ${selecionado ? "" : "text-muted"}`}>
-                    {diaDaSemanaCurto(d)}
-                  </span>
-                  <span className="text-lg font-semibold tabular-nums">{Number(d.slice(8))}</span>
-                  <span
-                    className={`mt-0.5 size-1.5 rounded-full ${
-                      diasComSessao.has(d)
-                        ? selecionado
-                          ? "bg-accent-foreground"
-                          : "bg-accent"
-                        : "bg-transparent"
+        <ArrastarSemana
+          anterior={`/agenda?dia=${somarDias(dia, -7)}`}
+          proxima={`/agenda?dia=${somarDias(dia, 7)}`}
+        >
+          <ol className="grid grid-cols-7 gap-1">
+            {dias.map((d) => {
+              const selecionado = d === dia;
+              const ehHoje = d === diaHoje;
+              return (
+                <li key={d}>
+                  <Link
+                    href={`/agenda?dia=${d}`}
+                    aria-label={nomeDoDia(d)}
+                    aria-current={selecionado ? "date" : undefined}
+                    className={`flex flex-col items-center rounded-2xl py-2 transition ${
+                      selecionado
+                        ? "bg-accent text-accent-foreground"
+                        : ehHoje
+                          ? "text-accent"
+                          : "hover:bg-surface"
                     }`}
-                  />
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
+                  >
+                    <span
+                      className={`text-[11px] uppercase ${selecionado ? "" : "text-muted"}`}
+                    >
+                      {diaDaSemanaCurto(d)}
+                    </span>
+                    <span className="text-lg font-semibold tabular-nums">
+                      {Number(d.slice(8))}
+                    </span>
+                    <span
+                      className={`mt-0.5 size-1.5 rounded-full ${
+                        diasComSessao.has(d)
+                          ? selecionado
+                            ? "bg-accent-foreground"
+                            : "bg-accent"
+                          : "bg-transparent"
+                      }`}
+                    />
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        </ArrastarSemana>
         <Link
           href={`/agenda?dia=${somarDias(dia, 7)}`}
           aria-label="Próxima semana"
@@ -126,7 +149,9 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
 
       {!error && linha.length === 0 && (
         <div className="card py-10 text-center text-muted">
-          {dia < diaHoje ? "Nenhuma sessão neste dia." : "Sem horário livre neste dia."}
+          {dia < diaHoje
+            ? "Nenhuma sessão neste dia."
+            : "Sem horário livre neste dia."}
         </div>
       )}
 
@@ -145,7 +170,10 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
               >
                 <Plus className="size-4 shrink-0" />
                 <span>
-                  Livre · <span className="tabular-nums">{item.inicio} – {item.fim}</span>
+                  Livre ·{" "}
+                  <span className="tabular-nums">
+                    {item.inicio} – {item.fim}
+                  </span>
                 </span>
               </Link>
             </li>
@@ -155,7 +183,9 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
 
       {canceladas.length > 0 && (
         <section className="mt-5 flex flex-col gap-2">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Canceladas</h3>
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
+            Canceladas
+          </h3>
           <ul className="flex flex-col gap-2">
             {canceladas.map((s) => (
               <li key={s.id}>
