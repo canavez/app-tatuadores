@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 type Props = {
-  titulo: string;
+  titulo: React.ReactNode;
   /** Mostra a seta de voltar para este endereço. */
   voltar?: string;
   /** Texto pequeno acima do título. */

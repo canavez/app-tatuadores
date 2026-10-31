@@ -58,4 +58,11 @@ test("faixa de dias corre como carrossel sem trocar o dia escolhido", async ({ p
   await dia("sábado, 24 de outubro").click();
   await expect(page).toHaveURL(/dia=2026-10-24$/);
   await expect(dia("terça-feira, 27 de outubro")).toBeInViewport();
+
+  // O título acompanha o mês dos dias que estão à vista.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Outubro de 2026");
+  // Duas semanas à frente, o dia do meio da faixa já é de novembro.
+  await page.getByRole("link", { name: "Próxima semana" }).click();
+  await page.getByRole("link", { name: "Próxima semana" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Novembro de 2026");
 });

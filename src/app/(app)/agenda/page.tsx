@@ -16,7 +16,12 @@ import {
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao } from "@/components/card-sessao";
-import { FaixaDias, type DiaDaFaixa } from "./faixa-dias";
+import {
+  FaixaDias,
+  MesDaFaixa,
+  ProvedorDoMes,
+  type DiaDaFaixa,
+} from "./faixa-dias";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
 
@@ -62,6 +67,7 @@ export default async function AgendaPage({
     curto: diaDaSemanaCurto(d),
     numero: Number(d.slice(8)),
     rotulo: nomeDoDia(d),
+    mes: mesAno(d).replace(/^./, (c) => c.toUpperCase()),
     temSessao: diasComSessao.has(d),
   }));
   const linha = linhaDoTempo(doDia, dia, {
@@ -80,9 +86,9 @@ export default async function AgendaPage({
       : `${minutosLivres} min`;
 
   return (
-    <>
+    <ProvedorDoMes inicial={faixa[SEMANAS * 7 + 3].mes}>
       <Topo
-        titulo={mesAno(dia).replace(/^./, (c) => c.toUpperCase())}
+        titulo={<MesDaFaixa />}
         acoes={
           dia !== diaHoje && (
             <Link href="/agenda" className="botao-secundario py-1.5">
@@ -163,6 +169,6 @@ export default async function AgendaPage({
       )}
 
       <BotaoFlutuante href={`/agenda/nova?data=${dia}`} rotulo="Nova sessão" />
-    </>
+    </ProvedorDoMes>
   );
 }

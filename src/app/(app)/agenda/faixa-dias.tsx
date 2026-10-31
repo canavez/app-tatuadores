@@ -1,6 +1,13 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -9,8 +16,30 @@ export type DiaDaFaixa = {
   curto: string; // "seg"
   numero: number;
   rotulo: string; // "segunda-feira, 12 de outubro"
+  mes: string; // "Outubro de 2026"
   temSessao: boolean;
 };
+
+// O título da tela mostra o mês dos dias que estão à vista na faixa.
+const Mes = createContext<{
+  mes: string;
+  setMes: (mes: string) => void;
+} | null>(null);
+
+export function ProvedorDoMes({
+  inicial,
+  children,
+}: {
+  inicial: string;
+  children: ReactNode;
+}) {
+  const [mes, setMes] = useState(inicial);
+  return <Mes.Provider value={{ mes, setMes }}>{children}</Mes.Provider>;
+}
+
+export function MesDaFaixa() {
+  return useContext(Mes)?.mes ?? null;
+}
 
 /**
  * Faixa de dias que corre como um carrossel: arrastar (dedo ou mouse) anda dia a dia,
@@ -33,10 +62,15 @@ export function FaixaDias({
 }) {
   const faixa = useRef<HTMLOListElement>(null);
   const [comAnteriores, setComAnteriores] = useState(false);
+  const setMes = useContext(Mes)?.setMes;
   const visiveis = comAnteriores ? dias : dias.slice(inicio);
   // Primeiro dia à vista, para a faixa não pular quando se escolhe um dia.
   const primeiroVisivel = useRef<string | null>(null);
-  const arraste = useRef<{ x: number; rolagem: number; arrastou: boolean } | null>(null);
+  const arraste = useRef<{
+    x: number;
+    rolagem: number;
+    arrastou: boolean;
+  } | null>(null);
   const cliqueBloqueado = useRef(false);
   const alvo = useRef<number | null>(null); // dia para onde a faixa está rolando
   const religar = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -45,7 +79,10 @@ export function FaixaDias({
     const itens = faixa.current?.children;
     if (!itens || itens.length < 2) return 1;
     // Com frações de pixel (offsetLeft arredonda, e o erro somado pulava um dia).
-    return itens[1].getBoundingClientRect().left - itens[0].getBoundingClientRect().left;
+    return (
+      itens[1].getBoundingClientRect().left -
+      itens[0].getBoundingClientRect().left
+    );
   }
 
   // De propósito: renderiza de novo antes de pintar, já com a rolagem no lugar.
@@ -60,18 +97,32 @@ export function FaixaDias({
     const el = faixa.current;
     if (!el || !comAnteriores) return;
     const indice = (data: string) => dias.findIndex((d) => d.data === data);
-    const atual = primeiroVisivel.current ? indice(primeiroVisivel.current) : -1;
+    const atual = primeiroVisivel.current
+      ? indice(primeiroVisivel.current)
+      : -1;
     const indiceDia = indice(dia);
     const manter = atual >= 0 && indiceDia >= atual && indiceDia < atual + 7;
-    el.scrollLeft = (manter ? atual : inicio) * passo();
-    primeiroVisivel.current = dias[manter ? atual : inicio].data;
-  }, [comAnteriores, dias, dia, inicio]);
+    const primeiro = manter ? atual : inicio;
+    // Vai direto (interrompe uma animação que ainda estivesse rolando).
+    clearTimeout(religar.current);
+    alvo.current = null;
+    el.style.scrollSnapType = "";
+    el.scrollLeft = primeiro * passo();
+    primeiroVisivel.current = dias[primeiro].data;
+    setMes?.(dias[primeiro + 3].mes);
+  }, [comAnteriores, dias, dia, inicio, setMes]);
 
   function aoRolar() {
     const el = faixa.current;
-    if (!el || !comAnteriores) return;
-    const i = Math.round(el.scrollLeft / passo());
-    primeiroVisivel.current = visiveis[Math.min(Math.max(i, 0), visiveis.length - 1)].data;
+    // Durante uma animação, o que vale é o destino, não o meio do caminho.
+    if (!el || !comAnteriores || alvo.current !== null) return;
+    const i = Math.min(
+      Math.max(Math.round(el.scrollLeft / passo()), 0),
+      visiveis.length - 7,
+    );
+    primeiroVisivel.current = visiveis[i].data;
+    // O dia do meio decide o mês, quando a faixa mostra dois meses.
+    setMes?.(visiveis[i + 3].mes);
   }
 
   // Rola suave até um dia. O encaixe automático fica desligado durante a animação,
@@ -80,6 +131,8 @@ export function FaixaDias({
     const el = faixa.current;
     if (!el) return;
     alvo.current = Math.min(Math.max(indice, 0), visiveis.length - 7);
+    primeiroVisivel.current = visiveis[alvo.current].data;
+    setMes?.(visiveis[alvo.current + 3].mes);
     el.style.scrollSnapType = "none";
     el.scrollTo({ left: alvo.current * passo(), behavior: "smooth" });
     clearTimeout(religar.current);
@@ -100,7 +153,11 @@ export function FaixaDias({
   // No celular a rolagem é a nativa. Com mouse, arrastar também rola.
   function comecar(e: React.PointerEvent<HTMLOListElement>) {
     if (e.pointerType !== "mouse" || e.button !== 0) return;
-    arraste.current = { x: e.clientX, rolagem: e.currentTarget.scrollLeft, arrastou: false };
+    arraste.current = {
+      x: e.clientX,
+      rolagem: e.currentTarget.scrollLeft,
+      arrastou: false,
+    };
   }
 
   function mover(e: React.PointerEvent<HTMLOListElement>) {
@@ -173,10 +230,14 @@ export function FaixaDias({
                       : "hover:bg-surface"
                 }`}
               >
-                <span className={`text-[11px] uppercase ${selecionado ? "" : "text-muted"}`}>
+                <span
+                  className={`text-[11px] uppercase ${selecionado ? "" : "text-muted"}`}
+                >
                   {d.curto}
                 </span>
-                <span className="text-lg font-semibold tabular-nums">{d.numero}</span>
+                <span className="text-lg font-semibold tabular-nums">
+                  {d.numero}
+                </span>
                 <span
                   className={`mt-0.5 size-1.5 rounded-full ${
                     d.temSessao
