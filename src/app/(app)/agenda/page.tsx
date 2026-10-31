@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   dataValida,
@@ -16,9 +16,12 @@ import {
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao } from "@/components/card-sessao";
-import { ArrastarSemana } from "./arrastar-semana";
+import { FaixaDias, type DiaDaFaixa } from "./faixa-dias";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
+
+// Semanas antes e depois da semana escolhida que a faixa de dias deixa rolar.
+const SEMANAS = 8;
 
 export default async function AgendaPage({
   searchParams,
@@ -27,27 +30,40 @@ export default async function AgendaPage({
   const diaHoje = hoje();
   const dia = dataValida(diaParam) ? diaParam : diaHoje;
   const segunda = inicioDaSemana(dia);
-  const dias = Array.from({ length: 7 }, (_, i) => somarDias(segunda, i));
+  const primeiro = somarDias(segunda, -SEMANAS * 7);
+  const dias = Array.from({ length: (SEMANAS * 2 + 1) * 7 }, (_, i) =>
+    somarDias(primeiro, i),
+  );
 
-  // Busca a semana inteira para marcar os dias que têm sessão.
+  // Sessões do dia escolhido, e só o horário das sessões da faixa toda (para as bolinhas).
   const supabase = await createClient();
-  const [{ data, error }, config] = await Promise.all([
+  const [{ data, error }, { data: daFaixa }, config] = await Promise.all([
     supabase
       .from("sessoes")
       .select(SELECT_SESSAO_COMPLETA)
-      .gte("inicio", paraInstante(segunda, "00:00"))
-      .lt("inicio", paraInstante(somarDias(segunda, 7), "00:00"))
+      .gte("inicio", paraInstante(dia, "00:00"))
+      .lt("inicio", paraInstante(somarDias(dia, 1), "00:00"))
       .order("inicio"),
+    supabase
+      .from("sessoes")
+      .select("inicio")
+      .neq("status", "cancelado")
+      .gte("inicio", paraInstante(primeiro, "00:00"))
+      .lt("inicio", paraInstante(somarDias(primeiro, dias.length), "00:00")),
     buscarConfiguracoes(),
   ]);
-  const sessoes = (data ?? []) as unknown as SessaoCompleta[];
+  const doDia = (data ?? []) as unknown as SessaoCompleta[];
 
   const diasComSessao = new Set(
-    sessoes
-      .filter((s) => s.status !== "cancelado")
-      .map((s) => partesLocais(s.inicio).data),
+    (daFaixa ?? []).map((s) => partesLocais(s.inicio).data),
   );
-  const doDia = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
+  const faixa: DiaDaFaixa[] = dias.map((d) => ({
+    data: d,
+    curto: diaDaSemanaCurto(d),
+    numero: Number(d.slice(8)),
+    rotulo: nomeDoDia(d),
+    temSessao: diasComSessao.has(d),
+  }));
   const linha = linhaDoTempo(doDia, dia, {
     inicio: config.hora_inicio,
     fim: config.hora_fim,
@@ -76,68 +92,8 @@ export default async function AgendaPage({
         }
       />
 
-      {/* Faixa da semana */}
-      <div className="flex items-center gap-1">
-        <Link
-          href={`/agenda?dia=${somarDias(dia, -7)}`}
-          aria-label="Semana anterior"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface"
-        >
-          <ChevronLeft className="size-5" />
-        </Link>
-        <ArrastarSemana
-          anterior={`/agenda?dia=${somarDias(dia, -7)}`}
-          proxima={`/agenda?dia=${somarDias(dia, 7)}`}
-        >
-          <ol className="grid grid-cols-7 gap-1">
-            {dias.map((d) => {
-              const selecionado = d === dia;
-              const ehHoje = d === diaHoje;
-              return (
-                <li key={d}>
-                  <Link
-                    href={`/agenda?dia=${d}`}
-                    aria-label={nomeDoDia(d)}
-                    aria-current={selecionado ? "date" : undefined}
-                    className={`flex flex-col items-center rounded-2xl py-2 transition ${
-                      selecionado
-                        ? "bg-accent text-accent-foreground"
-                        : ehHoje
-                          ? "text-accent"
-                          : "hover:bg-surface"
-                    }`}
-                  >
-                    <span
-                      className={`text-[11px] uppercase ${selecionado ? "" : "text-muted"}`}
-                    >
-                      {diaDaSemanaCurto(d)}
-                    </span>
-                    <span className="text-lg font-semibold tabular-nums">
-                      {Number(d.slice(8))}
-                    </span>
-                    <span
-                      className={`mt-0.5 size-1.5 rounded-full ${
-                        diasComSessao.has(d)
-                          ? selecionado
-                            ? "bg-accent-foreground"
-                            : "bg-accent"
-                          : "bg-transparent"
-                      }`}
-                    />
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
-        </ArrastarSemana>
-        <Link
-          href={`/agenda?dia=${somarDias(dia, 7)}`}
-          aria-label="Próxima semana"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface"
-        >
-          <ChevronRight className="size-5" />
-        </Link>
-      </div>
+      {/* Faixa de dias (carrossel) */}
+      <FaixaDias dias={faixa} inicio={SEMANAS * 7} dia={dia} hoje={diaHoje} />
 
       <h2 className="mb-3 mt-6 text-sm font-semibold text-muted first-letter:uppercase">
         {nomeDoDia(dia)}

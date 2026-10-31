@@ -30,25 +30,32 @@ test("dia em linha do tempo: horário livre abre a nova sessão já preenchida",
   await expect(page.getByRole("link", { name: /Livre · 12:00/ })).toHaveCount(0);
 });
 
-test("arrastar a faixa da semana troca de semana", async ({ page }) => {
+test("faixa de dias corre como carrossel sem trocar o dia escolhido", async ({ page }) => {
   await page.goto("/agenda?dia=2026-10-14");
-  const faixa = page.getByRole("link", { name: /quarta-feira, 14 de outubro/i });
-  const caixa = (await faixa.boundingBox())!;
+  const dia = (nome: string) => page.getByRole("link", { name: nome });
+  await expect(dia("domingo, 18 de outubro")).toBeInViewport();
+  await expect(dia("segunda-feira, 19 de outubro")).not.toBeInViewport();
+
+  // Arrastar um pouco anda poucos dias.
+  const caixa = (await dia("quarta-feira, 14 de outubro").boundingBox())!;
+  const x = caixa.x + caixa.width / 2;
   const y = caixa.y + caixa.height / 2;
-
-  // Para a esquerda: próxima semana.
-  await page.mouse.move(caixa.x + caixa.width / 2, y);
+  await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(caixa.x + caixa.width / 2 - 60, y, { steps: 5 });
-  await page.mouse.move(caixa.x + caixa.width / 2 - 140, y, { steps: 5 });
+  await page.mouse.move(x - caixa.width * 2, y, { steps: 10 });
   await page.mouse.up();
-  await expect(page).toHaveURL(/dia=2026-10-21$/);
-
-  // Para a direita: volta.
-  await page.mouse.move(caixa.x + caixa.width / 2, y);
-  await page.mouse.down();
-  await page.mouse.move(caixa.x + caixa.width / 2 + 60, y, { steps: 5 });
-  await page.mouse.move(caixa.x + caixa.width / 2 + 140, y, { steps: 5 });
-  await page.mouse.up();
+  await expect(dia("terça-feira, 20 de outubro")).toBeInViewport();
+  await expect(dia("segunda-feira, 12 de outubro")).not.toBeInViewport();
   await expect(page).toHaveURL(/dia=2026-10-14$/);
+
+  // A seta pula uma semana, e o destaque continua só no dia escolhido.
+  await page.getByRole("link", { name: "Próxima semana" }).click();
+  await expect(dia("terça-feira, 27 de outubro")).toBeInViewport();
+  await expect(page).toHaveURL(/dia=2026-10-14$/);
+  await expect(page.locator('[aria-current="date"]')).toHaveCount(1);
+
+  // Tocar num dia escolhe ele sem a faixa pular.
+  await dia("sábado, 24 de outubro").click();
+  await expect(page).toHaveURL(/dia=2026-10-24$/);
+  await expect(dia("terça-feira, 27 de outubro")).toBeInViewport();
 });

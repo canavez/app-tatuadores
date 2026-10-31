@@ -89,3 +89,11 @@ body {
     max-width: none !important;
   }
 }
+
+/* Rolagem sem barra (ex.: a faixa de dias da Agenda). */
+.sem-barra {
+  scrollbar-width: none;
+}
+.sem-barra::-webkit-scrollbar {
+  display: none;
+}
