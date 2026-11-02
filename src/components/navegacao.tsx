@@ -19,13 +19,13 @@ function useAbaAtiva() {
   return (href: string) => caminho === href || caminho.startsWith(`${href}/`);
 }
 
-/** Abas fixas no rodapé (celular). */
+/** Abas no rodapé (celular). */
 export function MenuInferior() {
   const ativa = useAbaAtiva();
   return (
     <nav
       aria-label="Menu principal"
-      className="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="shrink-0 print:hidden border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="mx-auto grid max-w-md grid-cols-6">
         {ABAS.map(({ href, rotulo, Icone }) => (
@@ -51,7 +51,7 @@ export function MenuInferior() {
 export function MenuSuperior() {
   const ativa = useAbaAtiva();
   return (
-    <header className="sticky top-0 z-30 hidden print:hidden border-b border-border bg-surface md:block">
+    <header className="hidden shrink-0 print:hidden border-b border-border bg-surface md:block">
       <div className="mx-auto flex max-w-3xl items-center gap-8 px-6 py-3">
         <Link href="/hoje">
           <Image src="/logo.png" alt="Ravenn" width={640} height={203} className="h-7 w-auto" />

@@ -84,7 +84,7 @@ body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  main {
+  main > div {
     padding: 0 !important;
     max-width: none !important;
   }
