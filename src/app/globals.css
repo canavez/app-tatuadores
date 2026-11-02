@@ -90,6 +90,25 @@ body {
   }
 }
 
+/* Altura da moldura do app (layout de (app)): a tela inteira. */
+.altura-tela {
+  height: 100dvh;
+}
+/* No app instalado no iPhone (iOS 26), com a barra de status transparente, a página
+   recebe uma tela mais curta que a real, pela altura da barra de status, e sobra uma
+   faixa preta embaixo (WebKit 301108). Soma essa altura; min() evita passar da tela
+   onde o bug não acontece. */
+@media (display-mode: standalone) {
+  .altura-tela {
+    height: min(100lvh, calc(100dvh + env(safe-area-inset-top)));
+  }
+}
+@media print {
+  .altura-tela {
+    height: auto;
+  }
+}
+
 /* Rolagem sem barra (ex.: a faixa de dias da Agenda). */
 .sem-barra {
   scrollbar-width: none;
