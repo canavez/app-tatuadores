@@ -11,10 +11,13 @@ type Props = {
   acoes?: React.ReactNode;
 };
 
-/** Cabeçalho de cada tela, no estilo de app: voltar, título e ações. */
+/**
+ * Cabeçalho de cada tela, no estilo de app: voltar, título e ações. No app instalado
+ * desce mais um pouco: o iOS 26 esfuma o que fica logo abaixo da barra de status.
+ */
 export function Topo({ titulo, voltar, subtitulo, acoes }: Props) {
   return (
-    <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-border bg-background px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pt-0 print:static print:border-0">
+    <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-border bg-background px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] max-md:instalado:pt-[calc(env(safe-area-inset-top)+1.75rem)] md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pt-0 print:static print:border-0">
       <div className="flex min-h-10 items-center gap-2">
         {voltar && (
           <Link

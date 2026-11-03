@@ -3,6 +3,8 @@
 /* O app é sempre escuro. A classe "dark" fica fixa no <html> (layout.tsx),
    então as variantes dark: valem mesmo com o celular no modo claro. */
 @custom-variant dark (&:where(.dark, .dark *));
+/* App instalado (tela de início do celular), não aberto no navegador. */
+@custom-variant instalado (@media (display-mode: standalone));
 
 /* Paleta Ravenn "Noite e violeta", com o violeta e o lavanda da logo. */
 :root {
