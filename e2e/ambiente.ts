@@ -2,11 +2,15 @@
 // .env.local tem o projeto real; .env.test.local (fora do git) tem o de testes:
 //   TESTE_SUPABASE_URL, TESTE_SUPABASE_ANON_KEY, TESTE_SUPABASE_SECRET_KEY,
 //   TESTE_EMAIL e TESTE_SENHA (conta criada sozinha no primeiro teste).
+import { readFileSync } from "node:fs";
+import { parseEnv } from "node:util";
+
 export function usarProjetoDeTestes() {
   process.loadEnvFile(".env.local");
   process.loadEnvFile(".env.test.local");
 
-  const real = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Lido do arquivo: nos processos dos testes a variável já vem trocada pelo de testes.
+  const real = parseEnv(readFileSync(".env.local", "utf8")).NEXT_PUBLIC_SUPABASE_URL;
   const teste = process.env.TESTE_SUPABASE_URL;
   if (!teste || !process.env.TESTE_SUPABASE_ANON_KEY) {
     throw new Error(

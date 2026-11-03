@@ -29,25 +29,30 @@ test("mostra as sessões do dia, as pendências e o lembrete de amanhã", async 
   await expect(page).toHaveURL(/\/hoje$/);
   const nome = escapar(cliente);
   await expect(page.getByRole("link", { name: new RegExp(`${inicio}.*${nome}.*Caveira`) })).toBeVisible();
+  // Só a lista de pendências: o destaque da próxima sessão (a de amanhã, do mesmo
+  // cliente) também mostra anamnese, termo e sinal.
+  const pendencias = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Pendências" }) });
   for (const pendencia of [
     "Preencher anamnese",
     "Coletar assinatura do termo",
     "Sinal não registrado",
     "Definir o valor da sessão",
   ]) {
-    await expect(page.getByRole("link", { name: new RegExp(`${pendencia}.*${nome}`) })).toBeVisible();
+    await expect(pendencias.getByRole("link", { name: new RegExp(`${pendencia}.*${nome}`) })).toBeVisible();
   }
 
   // O lembrete do cliente aparece (no destaque da próxima sessão ou na lista de amanhã).
   await expect(page.locator('a[href*="wa.me/5511999998888"]').first()).toBeVisible();
 
   // Resolver uma pendência pelo atalho tira ela da lista.
-  await page.getByRole("link", { name: new RegExp(`Sinal não registrado.*${nome}`) }).click();
+  await pendencias.getByRole("link", { name: new RegExp(`Sinal não registrado.*${nome}`) }).click();
   await page.getByLabel("Valor recebido").fill("100");
   await page.getByRole("button", { name: "Registrar" }).click();
   await expect(page.getByText("Confirmado", { exact: true })).toBeVisible();
 
   await page.goto("/hoje");
-  await expect(page.getByRole("link", { name: new RegExp(`Preencher anamnese.*${nome}`) })).toBeVisible();
-  await expect(page.getByRole("link", { name: new RegExp(`Sinal não registrado.*${nome}`) })).toHaveCount(0);
+  await expect(pendencias.getByRole("link", { name: new RegExp(`Preencher anamnese.*${nome}`) })).toBeVisible();
+  await expect(pendencias.getByRole("link", { name: new RegExp(`Sinal não registrado.*${nome}`) })).toHaveCount(0);
 });
