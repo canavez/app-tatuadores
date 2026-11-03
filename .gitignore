@@ -50,3 +50,6 @@ scripts/*.log
 
 # SQL de todas as migrações juntas, para colar num projeto Supabase novo
 /supabase/tudo-junto.sql
+
+# configuração local dos servidores do Claude
+/.claude/launch.json
