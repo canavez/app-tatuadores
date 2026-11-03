@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:celular"],
       "port": 3000
+    },
+    {
+      "name": "farol",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "../farol", "run", "dev", "--", "--port", "5174", "--strictPort"],
+      "port": 5174
     }
   ]
 }

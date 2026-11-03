@@ -1,10 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { PREFIXO } from "./ajuda";
+import { usarProjetoDeTestes } from "./ambiente";
 
 // Apaga os clientes criados pelos testes (tatuagens, sessões e anamneses vão junto).
 export default async function limpeza() {
-  process.loadEnvFile(".env.local");
-  process.loadEnvFile(".env.test.local");
+  usarProjetoDeTestes();
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

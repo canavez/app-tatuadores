@@ -47,3 +47,6 @@ next-env.d.ts
 
 # log da tarefa que mantém o Supabase ativo
 scripts/*.log
+
+# SQL de todas as migrações juntas, para colar num projeto Supabase novo
+/supabase/tudo-junto.sql
