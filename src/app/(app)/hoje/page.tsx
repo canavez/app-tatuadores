@@ -29,6 +29,7 @@ import { linkDaFoto } from "@/lib/fotos";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao, type SessaoDoCard } from "@/components/card-sessao";
 import { ProximaSessao, type Pendencia } from "./proxima-sessao";
+import { ConviteLembretes } from "@/components/controle-lembretes";
 
 type SessaoDoDia = SessaoDoCard & {
   tatuagem_id: string;
@@ -199,6 +200,8 @@ export default async function HojePage() {
 
       <div className="flex flex-col gap-5">
         {error && <p className="aviso-erro">Erro ao carregar o dia.</p>}
+
+        <ConviteLembretes />
 
         {proxima ? (
           <ProximaSessao

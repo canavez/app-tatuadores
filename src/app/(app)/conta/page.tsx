@@ -8,6 +8,7 @@ import { TrocarFoto } from "@/components/trocar-foto";
 import { linkDaFoto } from "@/lib/fotos";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { NomeForm } from "./nome-form";
+import { ControleLembretes } from "@/components/controle-lembretes";
 import { HorarioForm } from "./horario-form";
 import { apagarDadosExemplo, gerarDadosExemplo } from "./exemplo-actions";
 
@@ -99,6 +100,8 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
             </div>
           </Secao>
         )}
+
+        <ControleLembretes />
 
         <Secao titulo="Segurança">
           <LinhaLink

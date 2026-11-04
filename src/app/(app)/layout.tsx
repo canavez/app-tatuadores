@@ -1,4 +1,5 @@
 import { MenuInferior, MenuSuperior } from "@/components/navegacao";
+import { LembretesNoCelular } from "@/components/lembretes-no-celular";
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
@@ -11,6 +12,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         <div className="mx-auto w-full max-w-3xl px-4 pb-24 md:px-6 md:py-8">{children}</div>
       </main>
       <MenuInferior />
+      <LembretesNoCelular />
     </div>
   );
 }
