@@ -30,6 +30,7 @@ import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao, type SessaoDoCard } from "@/components/card-sessao";
 import { ProximaSessao, type Pendencia } from "./proxima-sessao";
 import { ConviteLembretes } from "@/components/controle-lembretes";
+import { buscarAssinatura } from "@/lib/assinatura";
 
 type SessaoDoDia = SessaoDoCard & {
   tatuagem_id: string;
@@ -165,6 +166,7 @@ export default async function HojePage() {
   ]);
   const sessoes = (data ?? []) as unknown as SessaoDoDia[];
   const primeiroNome = nomeDoUsuario(usuario.data.user).split(" ")[0];
+  const assinatura = await buscarAssinatura();
 
   const deHoje = sessoes.filter((s) => partesLocais(s.inicio).data === dia);
   const ativasHoje = deHoje.filter((s) => s.status !== "cancelado");
@@ -200,6 +202,16 @@ export default async function HojePage() {
 
       <div className="flex flex-col gap-5">
         {error && <p className="aviso-erro">Erro ao carregar o dia.</p>}
+
+        {assinatura?.situacao === "teste" && assinatura.dias <= 7 && (
+          <Link href="/assinatura" className="card flex items-center justify-between gap-3 border-amber-500/40 py-3 text-sm">
+            <span>
+              Seu período grátis termina{" "}
+              {assinatura.dias === 1 ? "amanhã" : `em ${assinatura.dias} dias`}.
+            </span>
+            <span className="shrink-0 font-semibold text-lavanda">Ver assinatura</span>
+          </Link>
+        )}
 
         <ConviteLembretes />
 

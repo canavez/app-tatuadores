@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ChevronRight, KeyRound, LogOut, ShieldCheck, Trash2, Wallet } from "lucide-react";
+import { ChevronRight, Crown, KeyRound, LogOut, ShieldCheck, Trash2, Wallet } from "lucide-react";
+import { buscarAssinatura } from "@/lib/assinatura";
 import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import { sair } from "@/app/login/actions";
@@ -42,6 +43,7 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
   } = await supabase.auth.getUser();
   const nome = nomeDoUsuario(user);
   const config = await buscarConfiguracoes();
+  const assinatura = await buscarAssinatura();
 
   return (
     <>
@@ -63,6 +65,31 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
             <p className="truncate text-sm text-muted">{user?.email}</p>
           </div>
         </div>
+
+        {assinatura && (
+          <Secao titulo="Assinatura">
+            <LinhaLink
+              href="/assinatura"
+              Icone={Crown}
+              titulo={
+                assinatura.situacao === "ativa"
+                  ? "Assinatura ativa"
+                  : assinatura.situacao === "teste"
+                    ? "Período grátis"
+                    : "Período grátis terminou"
+              }
+              detalhe={
+                assinatura.situacao === "teste"
+                  ? assinatura.dias === 1
+                    ? "Falta 1 dia"
+                    : `Faltam ${assinatura.dias} dias`
+                  : assinatura.situacao === "ativa"
+                    ? "Ver detalhes"
+                    : "Assine para continuar usando"
+              }
+            />
+          </Secao>
+        )}
 
         <Secao titulo="Perfil">
           <NomeForm nome={nome} />

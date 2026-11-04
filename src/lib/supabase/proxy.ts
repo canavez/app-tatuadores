@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { LIVRES_SEM_ASSINATURA, situacaoDa } from "@/lib/assinatura-regras";
 
 // "/privacidade" fica aberta: as lojas de apps pedem o link da política sem login.
 const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade"];
@@ -49,6 +50,22 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // Assinatura vencida: só ficam abertas a tela de assinar, a Conta e o relatório
+  // (a pessoa nunca perde acesso aos próprios dados nem à exclusão da conta).
+  const livre = LIVRES_SEM_ASSINATURA.some((r) => pathname === r || pathname.startsWith(`${r}/`));
+  if (user && !publica && !livre) {
+    const { data } = await supabase
+      .from("assinaturas")
+      .select("teste_ate, pago_ate, origem")
+      .maybeSingle();
+    if (data && situacaoDa(data).situacao === "vencida") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/assinatura";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
