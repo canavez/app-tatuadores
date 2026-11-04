@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const ROTAS_PUBLICAS = ["/login", "/auth"];
+// "/privacidade" fica aberta: as lojas de apps pedem o link da política sem login.
+const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

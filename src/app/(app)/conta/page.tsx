@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, KeyRound, LogOut, Wallet } from "lucide-react";
+import { ChevronRight, KeyRound, LogOut, ShieldCheck, Trash2, Wallet } from "lucide-react";
 import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import { sair } from "@/app/login/actions";
@@ -116,6 +116,22 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
               Sair deste aparelho
             </button>
           </form>
+        </Secao>
+
+        <Secao titulo="Privacidade">
+          <LinhaLink
+            href="/privacidade"
+            Icone={ShieldCheck}
+            titulo="Política de privacidade"
+            detalhe="Quais dados o Ravenn guarda e como"
+          />
+          <Link
+            href="/conta/excluir"
+            className="card flex items-center gap-3 py-3 text-sm font-medium text-red-400 active:bg-background"
+          >
+            <Trash2 className="size-5" />
+            Excluir minha conta
+          </Link>
         </Secao>
       </div>
     </>

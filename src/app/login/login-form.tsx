@@ -8,9 +8,12 @@ import { criarConta, entrar, entrarCom } from "./actions";
 
 export function LoginForm({
   erroRetorno,
+  aviso,
   provedores,
 }: {
   erroRetorno?: string;
+  /** Mensagem de sucesso no topo (ex.: conta excluída). */
+  aviso?: string;
   provedores: { google: boolean; apple: boolean };
 }) {
   const algumSocial = provedores.google || provedores.apple;
@@ -92,6 +95,7 @@ export function LoginForm({
           <div className="mt-8" />
         )}
 
+        {aviso && <p className="aviso-ok mb-4">{aviso}</p>}
         {erroRetorno && <p className="aviso-erro mb-4">{erroRetorno}</p>}
 
         <form
