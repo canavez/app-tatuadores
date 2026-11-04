@@ -15,10 +15,11 @@ async function provedoresAtivos(): Promise<{ google: boolean; apple: boolean }> 
 }
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const { erro, conta } = await searchParams;
+  const { erro, conta, modo } = await searchParams;
   return (
     <LoginForm
       provedores={await provedoresAtivos()}
+      modoInicial={modo === "criar" ? "criar" : "entrar"}
       aviso={conta === "excluida" ? "Sua conta e todos os seus dados foram excluídos." : undefined}
       erroRetorno={erro === "login" ? "Não foi possível concluir o login. Tente de novo." : undefined}
     />

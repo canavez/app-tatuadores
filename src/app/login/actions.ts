@@ -23,7 +23,7 @@ export async function entrar(_: EstadoLogin, formData: FormData): Promise<Estado
     }
     return { erro: "E-mail ou senha incorretos." };
   }
-  redirect("/");
+  redirect("/hoje");
 }
 
 export async function criarConta(_: EstadoLogin, formData: FormData): Promise<EstadoLogin> {
@@ -45,7 +45,7 @@ export async function criarConta(_: EstadoLogin, formData: FormData): Promise<Es
   });
 
   if (error) return { erro: error.message };
-  if (data.session) redirect("/");
+  if (data.session) redirect("/hoje");
   return { mensagem: "Conta criada! Enviamos um link de confirmação para o seu e-mail." };
 }
 

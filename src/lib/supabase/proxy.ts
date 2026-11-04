@@ -2,8 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { LIVRES_SEM_ASSINATURA, situacaoDa } from "@/lib/assinatura-regras";
 
-// "/privacidade" fica aberta: as lojas de apps pedem o link da política sem login.
-const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade"];
+// Abertas sem login: páginas que as lojas de apps e o Stripe conferem (política,
+// termos, suporte) e a página inicial "/" (só ela, não tudo que começa com "/").
+const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade", "/termos", "/suporte"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -38,7 +39,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const publica = ROTAS_PUBLICAS.some((r) => pathname.startsWith(r));
+  const publica = pathname === "/" || ROTAS_PUBLICAS.some((r) => pathname.startsWith(r));
 
   if (!user && !publica) {
     const url = request.nextUrl.clone();
@@ -46,9 +47,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname === "/login") {
+  // Logado não vê a página inicial nem o login: vai direto para o app.
+  if (user && (pathname === "/login" || pathname === "/")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/hoje";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

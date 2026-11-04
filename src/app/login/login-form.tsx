@@ -10,14 +10,17 @@ export function LoginForm({
   erroRetorno,
   aviso,
   provedores,
+  modoInicial = "entrar",
 }: {
   erroRetorno?: string;
   /** Mensagem de sucesso no topo (ex.: conta excluída). */
   aviso?: string;
   provedores: { google: boolean; apple: boolean };
+  /** "criar" abre direto no cadastro (link "Criar conta grátis" da página inicial). */
+  modoInicial?: "entrar" | "criar";
 }) {
   const algumSocial = provedores.google || provedores.apple;
-  const [modo, setModo] = useState<"entrar" | "criar">("entrar");
+  const [modo, setModo] = useState<"entrar" | "criar">(modoInicial);
   const [estadoEntrar, acaoEntrar, entrando] = useActionState(
     entrar,
     undefined,
@@ -150,6 +153,19 @@ export function LoginForm({
             {criandoConta ? "Entrar" : "Criar conta"}
           </button>
         </p>
+        {criandoConta && (
+          <p className="mt-3 text-center text-xs text-muted">
+            Ao criar a conta, você concorda com os{" "}
+            <Link href="/termos" className="underline">
+              termos de uso
+            </Link>{" "}
+            e a{" "}
+            <Link href="/privacidade" className="underline">
+              política de privacidade
+            </Link>
+            .
+          </p>
+        )}
       </div>
     </main>
   );

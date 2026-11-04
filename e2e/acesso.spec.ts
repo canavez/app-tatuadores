@@ -4,7 +4,8 @@ test.describe("sem login", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test("telas protegidas mandam para o login", async ({ page }) => {
-    for (const rota of ["/", "/hoje", "/agenda", "/clientes", "/clientes/novo"]) {
+    // "/" não entra: é a página inicial pública (ver paginas-publicas.spec.ts).
+    for (const rota of ["/hoje", "/agenda", "/clientes", "/clientes/novo", "/assinatura"]) {
       await page.goto(rota);
       await expect(page).toHaveURL(/\/login$/);
     }

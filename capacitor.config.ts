@@ -9,7 +9,9 @@ const config: CapacitorConfig = {
   // Página mostrada só se o site não abrir (sem internet).
   webDir: "app-nativo/www",
   server: {
-    url: "https://ravenn.me",
+    // Abre direto no app (sem login, cai no login). A página inicial, com o preço,
+    // fica só para o site: a Apple não quer preço de fora dentro do app.
+    url: "https://ravenn.me/hoje",
     // Links para outros sites (WhatsApp, Instagram) abrem fora do app.
     allowNavigation: ["ravenn.me"],
   },

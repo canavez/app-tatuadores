@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const proximo = searchParams.get("proximo");
   // Só aceita telas do próprio app (evita redirecionar para outro site).
-  const destino = proximo && /^\/[\w/-]*$/.test(proximo) ? proximo : "/";
+  const destino = proximo && /^\/[\w/-]*$/.test(proximo) ? proximo : "/hoje";
 
   if (code) {
     const supabase = await createClient();

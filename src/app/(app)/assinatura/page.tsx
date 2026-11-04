@@ -4,6 +4,7 @@ import { Topo } from "@/components/topo";
 import { buscarAssinatura } from "@/lib/assinatura";
 import { partesLocais } from "@/lib/agenda";
 import { formatarData } from "@/lib/clientes";
+import { precoMensal } from "@/lib/empresa";
 
 const INCLUI = [
   "Agenda com linha do tempo e lembretes no iPhone",
@@ -42,7 +43,11 @@ export default async function AssinaturaPage() {
         <div className="card flex flex-col gap-4">
           <div>
             <p className="text-lg font-semibold">Ravenn mensal</p>
-            <p className="text-sm text-muted">Tudo do app, sem limite de clientes.</p>
+            <p className="mt-1">
+              <span className="text-3xl font-bold">{precoMensal()}</span>
+              <span className="text-muted"> por mês</span>
+            </p>
+            <p className="text-sm text-muted">Tudo do app, sem limite de clientes. Cancele quando quiser.</p>
           </div>
           <ul className="flex flex-col gap-2 text-sm">
             {INCLUI.map((item) => (
