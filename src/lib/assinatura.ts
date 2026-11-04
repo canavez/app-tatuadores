@@ -15,3 +15,17 @@ export const buscarAssinatura = cache(async (): Promise<Assinatura | null> => {
   if (error || !data) return null;
   return situacaoDa(data);
 });
+
+/** Dados do Stripe de quem está logado (para mostrar "Gerenciar assinatura"). */
+export const buscarStripe = cache(async () => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("assinaturas")
+    .select("stripe_customer_id, stripe_subscription_id, stripe_status")
+    .maybeSingle();
+  return {
+    temCliente: Boolean(data?.stripe_customer_id),
+    temAssinatura: Boolean(data?.stripe_subscription_id),
+    status: (data?.stripe_status as string | null) ?? null,
+  };
+});

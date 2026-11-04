@@ -3,8 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { LIVRES_SEM_ASSINATURA, situacaoDa } from "@/lib/assinatura-regras";
 
 // Abertas sem login: páginas que as lojas de apps e o Stripe conferem (política,
-// termos, suporte) e a página inicial "/" (só ela, não tudo que começa com "/").
-const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade", "/termos", "/suporte"];
+// termos, suporte), o aviso automático do Stripe (webhook, que confere a própria
+// assinatura) e a página inicial "/" (só ela, não tudo que começa com "/").
+const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade", "/termos", "/suporte", "/api/stripe/webhook"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

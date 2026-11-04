@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Topo } from "@/components/topo";
-import { buscarAssinatura } from "@/lib/assinatura";
+import { buscarAssinatura, buscarStripe } from "@/lib/assinatura";
+import { createClient } from "@/lib/supabase/server";
+import { SITUACOES_VIVAS, sincronizarAssinatura, stripe } from "@/lib/stripe";
+import { BotaoAssinar, BotaoGerenciar } from "./botoes";
 import { partesLocais } from "@/lib/agenda";
 import { formatarData } from "@/lib/clientes";
 import { precoMensal } from "@/lib/empresa";
@@ -15,13 +18,47 @@ const INCLUI = [
 
 const data = (instante: string) => formatarData(partesLocais(instante).data);
 
-export default async function AssinaturaPage() {
+/**
+ * Voltou do pagamento: confere no Stripe e já libera o acesso (sem esperar o webhook).
+ * Só vale para uma sessão de pagamento do próprio tatuador logado.
+ */
+async function confirmarPagamento(sessaoId: string) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const sessao = await stripe().checkout.sessions.retrieve(sessaoId);
+    if (!user || sessao.client_reference_id !== user.id || !sessao.subscription) return false;
+    await sincronizarAssinatura(
+      typeof sessao.subscription === "string" ? sessao.subscription : sessao.subscription.id,
+    );
+    return true;
+  } catch {
+    // O webhook do Stripe libera logo em seguida de qualquer jeito.
+    return false;
+  }
+}
+
+export default async function AssinaturaPage({ searchParams }: PageProps<"/assinatura">) {
+  const { sessao } = await searchParams;
+  const pagou = typeof sessao === "string" && sessao.startsWith("cs_") && (await confirmarPagamento(sessao));
   const assinatura = await buscarAssinatura();
+  const doStripe = await buscarStripe();
+  // Já existe uma assinatura no Stripe (mesmo com cartão recusado): gerencia, não assina de novo.
+  const assinaturaViva = doStripe.temAssinatura && SITUACOES_VIVAS.includes(doStripe.status ?? "");
 
   return (
     <>
       <Topo titulo="Assinatura" voltar={assinatura?.situacao === "vencida" ? undefined : "/conta"} />
       <div className="flex flex-col gap-4">
+        {pagou && <p className="aviso-ok">Assinatura confirmada. Obrigado por assinar o Ravenn!</p>}
+        {doStripe.status === "past_due" || doStripe.status === "unpaid" ? (
+          <p className="aviso-erro">
+            Não conseguimos cobrar a mensalidade no seu cartão. Troque o cartão em &quot;Gerenciar
+            assinatura&quot; para continuar usando.
+          </p>
+        ) : null}
         {assinatura?.situacao === "vencida" && (
           <div className="card flex flex-col gap-1 border-amber-500/40">
             <p className="font-semibold">Seu período grátis terminou</p>
@@ -57,17 +94,12 @@ export default async function AssinaturaPage() {
               </li>
             ))}
           </ul>
-          {assinatura?.situacao !== "ativa" && (
-            <>
-              <button type="button" className="botao" disabled>
-                Assinar — em breve
-              </button>
-              <p className="text-xs text-muted">
-                A assinatura pelo app e pelo site abre em breve. Até lá, seu acesso continua liberado.
-              </p>
-            </>
+          {assinatura?.situacao !== "ativa" && !assinaturaViva && (
+            <BotaoAssinar gratisAte={assinatura?.situacao === "teste" ? data(assinatura.ate) : undefined} />
           )}
         </div>
+
+        {doStripe.temAssinatura && <BotaoGerenciar />}
 
         {assinatura?.situacao === "vencida" && (
           <div className="card flex flex-col gap-2 text-sm">

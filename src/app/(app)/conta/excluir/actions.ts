@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ESPACO_FOTOS } from "@/lib/fotos";
+import { SITUACOES_VIVAS, stripe } from "@/lib/stripe";
 
 export type EstadoExcluir = { erro?: string } | undefined;
 
@@ -19,6 +20,19 @@ export async function excluirConta(_: EstadoExcluir, formData: FormData): Promis
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Assinatura paga pelo site: cancela no Stripe antes, senão o cartão continua sendo cobrado.
+  const { data: assinatura } = await supabase
+    .from("assinaturas")
+    .select("stripe_subscription_id, stripe_status")
+    .maybeSingle();
+  if (assinatura?.stripe_subscription_id && SITUACOES_VIVAS.includes(assinatura.stripe_status ?? "")) {
+    try {
+      await stripe().subscriptions.cancel(assinatura.stripe_subscription_id);
+    } catch {
+      return { erro: "Não foi possível cancelar sua assinatura. Tente novamente." };
+    }
+  }
 
   // As fotos ficam no Storage, fora das tabelas: apaga antes da conta.
   const fotos = supabase.storage.from(ESPACO_FOTOS);
