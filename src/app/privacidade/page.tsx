@@ -5,8 +5,8 @@ import Link from "next/link";
 export const metadata: Metadata = { title: "Política de privacidade · Ravenn" };
 
 // Quem responde pelo Ravenn e como falar com ele (aparece na política e nas lojas).
-const RESPONSAVEL = "[nome completo do responsável]";
-const CONTATO = "[e-mail de contato]";
+const RESPONSAVEL = "Tadeu Canavez de Souza";
+const CONTATO = "tadeucanavezzz@gmail.com";
 const ATUALIZADA_EM = "3 de novembro de 2026";
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
