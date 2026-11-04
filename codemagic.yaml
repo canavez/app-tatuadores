@@ -1,0 +1,43 @@
+# Compila o app de iPhone num Mac na nuvem (Codemagic) e manda para o TestFlight.
+# Roda quando você clica em "Start new build" no Codemagic (não a cada push):
+# mudanças só no site chegam no app sozinhas; versão nova só para coisa nativa.
+#
+# Precisa, no Codemagic: a integração com a App Store Connect chamada "ravenn-asc"
+# (Teams → Integrations → Developer Portal) — ela cuida dos certificados sozinha.
+workflows:
+  ios-testflight:
+    name: iPhone → TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: ravenn-asc
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: me.ravenn.app
+      node: 24
+      xcode: latest
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Atualizar o projeto iOS (plugins e configuração)
+        script: npx cap sync ios
+      - name: Certificados e perfis de assinatura
+        script: xcode-project use-profiles
+      - name: Número do build (sobe a cada compilação)
+        script: |
+          cd $CM_BUILD_DIR/ios/App
+          agvtool new-version -all $BUILD_NUMBER
+      - name: Gerar o .ipa
+        script: |
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
