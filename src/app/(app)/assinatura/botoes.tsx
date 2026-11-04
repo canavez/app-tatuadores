@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { assinar, gerenciar } from "./actions";
+import { AssinarPelaApple, GerenciarPelaApple, usePrecoApple } from "./apple";
 
 /**
  * No app do iPhone a Apple não deixa vender assinatura por fora da App Store (nem pôr
- * botão ou link para pagar no site). Lá os botões somem; no site (ravenn.me) aparecem.
+ * botão ou link para pagar no site). Lá a compra é pela Apple; no site (ravenn.me), pelo Stripe.
  */
 function useNoApp() {
   const [noApp, setNoApp] = useState<boolean | null>(null);
@@ -27,12 +28,22 @@ function Enviar({ children, classe }: { children: React.ReactNode; classe: strin
   );
 }
 
-export function BotaoAssinar({ gratisAte }: { gratisAte?: string }) {
+/** Preço do card: no app, o que a App Store mostra; no site, o preço do Stripe. */
+export function Preco({ doSite }: { doSite: string }) {
+  const noApp = useNoApp();
+  if (noApp === null) return <span className="text-3xl font-bold">&nbsp;</span>;
+  return noApp ? <PrecoApple doSite={doSite} /> : <span className="text-3xl font-bold">{doSite}</span>;
+}
+
+function PrecoApple({ doSite }: { doSite: string }) {
+  const preco = usePrecoApple();
+  return <span className="text-3xl font-bold">{preco ?? doSite}</span>;
+}
+
+export function BotaoAssinar({ gratisAte, tatuadorId }: { gratisAte?: string; tatuadorId: string }) {
   const noApp = useNoApp();
   if (noApp === null) return null;
-  if (noApp) {
-    return <p className="text-xs text-muted">A assinatura ainda não pode ser feita pelo app do iPhone.</p>;
-  }
+  if (noApp) return <AssinarPelaApple tatuadorId={tatuadorId} />;
   return (
     <form action={assinar} className="flex flex-col gap-2">
       <Enviar classe="botao">Assinar</Enviar>
@@ -53,4 +64,10 @@ export function BotaoGerenciar({ texto = "Gerenciar assinatura" }: { texto?: str
       <p className="text-xs text-muted">Trocar o cartão, ver as faturas ou cancelar.</p>
     </form>
   );
+}
+
+export function BotaoGerenciarApple() {
+  const noApp = useNoApp();
+  if (noApp === null) return null;
+  return <GerenciarPelaApple noApp={noApp} />;
 }

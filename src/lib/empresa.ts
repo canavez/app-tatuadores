@@ -9,3 +9,6 @@ export const DIAS_GRATIS = 30;
 
 export const precoMensal = () =>
   PRECO_MENSAL.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
+
+/** Assinatura mensal na App Store (App Store Connect → Assinaturas → ID do produto). */
+export const PRODUTO_APPLE = "me.ravenn.app.mensal";

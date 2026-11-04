@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { Topo } from "@/components/topo";
+import { createClient } from "@/lib/supabase/server";
 import { ExcluirForm } from "./excluir-form";
 
-export default function ExcluirContaPage() {
+export default async function ExcluirContaPage() {
+  // A assinatura da Apple só a própria pessoa cancela (o Ravenn não consegue cancelar por ela).
+  const supabase = await createClient();
+  const { data: apple } = await supabase.from("assinaturas").select("apple_status").maybeSingle();
+  const appleRenova = apple?.apple_status === "ativa" || apple?.apple_status === "cobranca_falhou";
+
   return (
     <>
       <Topo titulo="Excluir conta" voltar="/conta" />
@@ -23,6 +29,12 @@ export default function ExcluirContaPage() {
             .
           </p>
         </div>
+        {appleRenova && (
+          <p className="aviso-erro">
+            Sua assinatura é pela Apple e continua sendo cobrada mesmo depois de excluir a conta. Cancele antes no
+            iPhone: Ajustes → seu nome → Assinaturas → Ravenn.
+          </p>
+        )}
         <ExcluirForm />
       </div>
     </>

@@ -72,10 +72,5 @@ Mesmo sem a CLI, ao voltar do pagamento a tela de Assinatura já confere no Stri
 
 ## Apple (app do iPhone)
 
-A Apple exige que assinaturas digitais vendidas **dentro** do app usem a compra da App Store
-(regra 3.1.1). Por isso, no app os botões de pagamento somem. Pontos de atenção:
-- A tela `/assinatura` ainda mostra o preço dentro do app; a revisão da Apple pode reclamar.
-- Quem assinou pelo site consegue usar o app normalmente (isso é permitido).
-- Quem está no app com o período vencido não tem como assinar por lá. Para o app passar na revisão
-  com assinatura obrigatória, o caminho mais seguro é adicionar a compra pela App Store
-  (a coluna `origem = 'apple'` já foi prevista para isso).
+A Apple exige que assinaturas vendidas **dentro** do app usem a compra da App Store (regra 3.1.1).
+Por isso, no app os botões do Stripe somem e aparece a compra pela Apple. Veja `docs/APPLE.md`.

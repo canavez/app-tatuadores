@@ -6,7 +6,7 @@ export type Assinatura =
   | { situacao: "vencida"; desde: string };
 
 /** Telas que continuam abertas com a assinatura vencida (assinar, conta e os próprios dados). */
-export const LIVRES_SEM_ASSINATURA = ["/assinatura", "/conta", "/financeiro/relatorio"];
+export const LIVRES_SEM_ASSINATURA = ["/assinatura", "/conta", "/financeiro/relatorio", "/api/apple/compra"];
 
 const DIA_MS = 86_400_000;
 
