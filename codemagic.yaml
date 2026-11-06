@@ -2,8 +2,11 @@
 # Roda quando você clica em "Start new build" no Codemagic (não a cada push):
 # mudanças só no site chegam no app sozinhas; versão nova só para coisa nativa.
 #
-# Precisa, no Codemagic: a integração com a App Store Connect chamada "ravenn-asc"
-# (Teams → Integrations → Developer Portal) — ela cuida dos certificados sozinha.
+# Precisa, no Codemagic:
+# - a integração com a App Store Connect chamada "ravenn-asc" (Integrations → Developer Portal);
+# - o grupo de variáveis "assinatura_ios" com CERTIFICATE_PRIVATE_KEY (secreta): a chave RSA
+#   do certificado de distribuição. Com ela, o build cria (na 1ª vez) ou reaproveita o
+#   certificado e o perfil da App Store sozinho.
 workflows:
   ios-testflight:
     name: iPhone → TestFlight
@@ -12,9 +15,8 @@ workflows:
     integrations:
       app_store_connect: ravenn-asc
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: me.ravenn.app
+      groups:
+        - assinatura_ios
       node: 24
       xcode: latest
     scripts:
@@ -22,8 +24,12 @@ workflows:
         script: npm ci
       - name: Atualizar o projeto iOS (plugins e configuração)
         script: npx cap sync ios
-      - name: Certificados e perfis de assinatura
-        script: xcode-project use-profiles
+      - name: Certificados e perfis de assinatura (cria na 1ª vez)
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "me.ravenn.app" --type IOS_APP_STORE --certificate-key=@env:CERTIFICATE_PRIVATE_KEY --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Número do build (sobe a cada compilação)
         script: |
           cd $CM_BUILD_DIR/ios/App
