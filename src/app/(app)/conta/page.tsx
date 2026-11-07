@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Crown, KeyRound, LogOut, ShieldCheck, Trash2, Wallet } from "lucide-react";
+import { ChevronRight, Crown, Inbox, KeyRound, LogOut, ShieldCheck, Trash2, Wallet } from "lucide-react";
 import { buscarAssinatura } from "@/lib/assinatura";
 import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
@@ -93,6 +93,15 @@ export default async function ContaPage({ searchParams }: PageProps<"/conta">) {
 
         <Secao titulo="Perfil">
           <NomeForm nome={nome} />
+        </Secao>
+
+        <Secao titulo="Orçamentos">
+          <LinhaLink
+            href="/conta/pagina"
+            Icone={Inbox}
+            titulo="Minha página de orçamento"
+            detalhe="Seu link ravenn.me para os clientes pedirem orçamento"
+          />
         </Secao>
 
         <Secao titulo="Agenda">

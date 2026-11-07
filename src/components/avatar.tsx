@@ -30,9 +30,10 @@ export function Avatar({
   nome: string;
   /** Link da foto; sem foto, mostra as iniciais. */
   foto?: string | null;
-  tamanho?: "normal" | "grande";
+  tamanho?: "normal" | "grande" | "pagina";
 }) {
-  const medidas = tamanho === "grande" ? "size-14 text-lg" : "size-10 text-sm";
+  const medidas =
+    tamanho === "pagina" ? "size-24 text-3xl" : tamanho === "grande" ? "size-14 text-lg" : "size-10 text-sm";
   if (foto) {
     return (
       // eslint-disable-next-line @next/next/no-img-element

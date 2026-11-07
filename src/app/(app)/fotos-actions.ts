@@ -22,6 +22,8 @@ export async function salvarFoto(alvo: { cliente: string } | "perfil", caminho: 
     const anterior = user.user_metadata?.foto as string | undefined;
     if (!caminho && anterior) await supabase.storage.from(ESPACO_FOTOS).remove([anterior]);
     await supabase.auth.updateUser({ data: { foto: caminho } });
+    // A página de orçamento usa a mesma foto (se o tatuador já criou a página).
+    await supabase.from("perfis").update({ foto: caminho }).eq("tatuador_id", user.id);
   } else {
     if (!caminho) {
       const { data } = await supabase.from("clientes").select("foto").eq("id", alvo.cliente).maybeSingle();

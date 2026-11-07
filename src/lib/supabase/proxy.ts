@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { LIVRES_SEM_ASSINATURA, situacaoDa } from "@/lib/assinatura-regras";
+import { ROTAS_RESERVADAS } from "@/lib/orcamentos";
 
 // Abertas sem login: páginas que as lojas de apps e o Stripe conferem (política,
 // termos, suporte), o aviso automático do Stripe (webhook, que confere a própria
@@ -40,7 +41,10 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const publica = pathname === "/" || ROTAS_PUBLICAS.some((r) => pathname.startsWith(r));
+  // Página de orçamento do tatuador (ravenn.me/<link>): um só pedaço que não é do app.
+  const pedacos = pathname.split("/").filter(Boolean);
+  const paginaDoTatuador = pedacos.length === 1 && !ROTAS_RESERVADAS.includes(pedacos[0]);
+  const publica = pathname === "/" || paginaDoTatuador || ROTAS_PUBLICAS.some((r) => pathname.startsWith(r));
 
   if (!user && !publica) {
     const url = request.nextUrl.clone();
