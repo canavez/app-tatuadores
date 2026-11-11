@@ -4,13 +4,13 @@ import { Topo } from "@/components/topo";
 import { buscarAssinatura, buscarStripe } from "@/lib/assinatura";
 import { createClient } from "@/lib/supabase/server";
 import { SITUACOES_VIVAS, sincronizarAssinatura, stripe } from "@/lib/stripe";
-import { BotaoAssinar, BotaoGerenciar, BotaoGerenciarApple, Preco } from "./botoes";
+import { BotaoAssinar, BotaoGerenciar, BotaoGerenciarApple, BotaoGerenciarGoogle, Preco } from "./botoes";
 import { partesLocais } from "@/lib/agenda";
 import { formatarData } from "@/lib/clientes";
 import { precoMensal } from "@/lib/empresa";
 
 const INCLUI = [
-  "Agenda com linha do tempo e lembretes no iPhone",
+  "Agenda com linha do tempo e lembretes no celular",
   "Clientes com anamnese, termo assinado e fotos",
   "Financeiro com taxas, comissão e relatórios em PDF",
   "Estoque com aviso de itens acabando",
@@ -49,13 +49,16 @@ export default async function AssinaturaPage({ searchParams }: PageProps<"/assin
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: apple } = await supabase
+  const { data: lojas } = await supabase
     .from("assinaturas")
-    .select("apple_transacao_original, apple_status")
+    .select("apple_transacao_original, apple_status, google_token, google_status")
     .maybeSingle();
   // Assinou pela Apple e a assinatura ainda pode renovar: gerencia na Apple, não assina de novo.
-  const appleViva = Boolean(apple?.apple_transacao_original) &&
-    ["ativa", "cancelada", "cobranca_falhou"].includes(apple?.apple_status ?? "");
+  const appleViva = Boolean(lojas?.apple_transacao_original) &&
+    ["ativa", "cancelada", "cobranca_falhou"].includes(lojas?.apple_status ?? "");
+  // O mesmo para o Google Play (pausada e pendente também voltam sozinhas).
+  const googleViva = Boolean(lojas?.google_token) &&
+    ["ativa", "cancelada", "cobranca_falhou", "pausada", "pendente"].includes(lojas?.google_status ?? "");
   // Já existe uma assinatura no Stripe (mesmo com cartão recusado): gerencia, não assina de novo.
   const assinaturaViva = doStripe.temAssinatura && SITUACOES_VIVAS.includes(doStripe.status ?? "");
 
@@ -105,7 +108,7 @@ export default async function AssinaturaPage({ searchParams }: PageProps<"/assin
               </li>
             ))}
           </ul>
-          {assinatura?.situacao !== "ativa" && !assinaturaViva && !appleViva && user && (
+          {assinatura?.situacao !== "ativa" && !assinaturaViva && !appleViva && !googleViva && user && (
             <BotaoAssinar
               tatuadorId={user.id}
               gratisAte={assinatura?.situacao === "teste" ? data(assinatura.ate) : undefined}
@@ -113,14 +116,26 @@ export default async function AssinaturaPage({ searchParams }: PageProps<"/assin
           )}
         </div>
 
-        {apple?.apple_status === "cobranca_falhou" && (
+        {lojas?.apple_status === "cobranca_falhou" && (
           <p className="aviso-erro">
             A Apple não conseguiu cobrar a mensalidade. Confira a forma de pagamento em Ajustes → seu nome →
             Assinaturas.
           </p>
         )}
+        {lojas?.google_status === "cobranca_falhou" && (
+          <p className="aviso-erro">
+            O Google Play não conseguiu cobrar a mensalidade. Confira a forma de pagamento na Play Store → seu
+            perfil → Pagamentos e assinaturas.
+          </p>
+        )}
+        {lojas?.google_status === "pendente" && (
+          <p className="text-sm text-muted">
+            Pagamento aguardando confirmação no Google Play. O acesso é liberado assim que ele confirmar.
+          </p>
+        )}
         {doStripe.temAssinatura && <BotaoGerenciar />}
-        {apple?.apple_transacao_original && <BotaoGerenciarApple />}
+        {lojas?.apple_transacao_original && <BotaoGerenciarApple />}
+        {lojas?.google_token && <BotaoGerenciarGoogle />}
 
         {assinatura?.situacao === "vencida" && (
           <div className="card flex flex-col gap-2 text-sm">

@@ -12,3 +12,8 @@ export const precoMensal = () =>
 
 /** Assinatura mensal na App Store (App Store Connect → Assinaturas → ID do produto). */
 export const PRODUTO_APPLE = "me.ravenn.app.mensal";
+
+/** Assinatura mensal no Google Play (Play Console → Monetizar → Assinaturas → ID do produto). */
+export const PRODUTO_GOOGLE = "me.ravenn.app.mensal";
+/** Plano básico mensal dentro da assinatura do Google Play (ID do plano básico). */
+export const PLANO_GOOGLE = "mensal";

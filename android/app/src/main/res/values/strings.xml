@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ravenn</string>
+    <string name="title_activity_main">Ravenn</string>
+    <string name="package_name">me.ravenn.app</string>
+    <string name="custom_url_scheme">me.ravenn.app</string>
+</resources>

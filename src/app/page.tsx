@@ -34,7 +34,7 @@ const RECURSOS: { Icone: LucideIcon; titulo: string; texto: string }[] = [
   },
   {
     Icone: BellRing,
-    titulo: "Lembretes no iPhone",
+    titulo: "Lembretes no celular",
     texto: "Aviso na véspera e 1 hora antes de cada sessão, com o que ainda falta (sinal, anamnese, termo).",
   },
 ];
