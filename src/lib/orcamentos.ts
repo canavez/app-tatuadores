@@ -135,3 +135,25 @@ export function quandoChegou(instante: string, agora = new Date()): string {
   if (dias < 7) return `há ${dias} dias`;
   return new Date(instante).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
 }
+
+/**
+ * Jeitos de escrever o mesmo celular, só com DDD + número: com e sem o 55 do Brasil
+ * e com e sem o 9 da frente (cadastros antigos às vezes não têm).
+ */
+export function chavesDoTelefone(telefone: string | null | undefined): string[] {
+  let d = (telefone ?? "").replace(/\D/g, "");
+  if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+  if (d.length > 11 && d.startsWith("0")) d = d.replace(/^0+/, "");
+  if (d.length === 11 && d[2] === "9") return [d, d.slice(0, 2) + d.slice(3)];
+  if (d.length === 10) return [d, `${d.slice(0, 2)}9${d.slice(2)}`];
+  return d.length >= 8 ? [d] : [];
+}
+
+export type ClienteDoOrcamento = { id: string; nome: string; telefone: string | null };
+
+/** Procura entre os clientes alguém com o mesmo celular do pedido (o primeiro que bater). */
+export function clientePeloTelefone<T extends ClienteDoOrcamento>(clientes: T[], telefone: string): T | null {
+  const chaves = new Set(chavesDoTelefone(telefone));
+  if (chaves.size === 0) return null;
+  return clientes.find((c) => chavesDoTelefone(c.telefone).some((k) => chaves.has(k))) ?? null;
+}

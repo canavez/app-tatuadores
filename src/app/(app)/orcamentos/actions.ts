@@ -35,6 +35,14 @@ export async function excluirOrcamento(id: string) {
   redirect("/orcamentos");
 }
 
+/** Liga o pedido a um cliente que já estava cadastrado (mesmo celular). */
+export async function ligarCliente(id: string, clienteId: string) {
+  const supabase = await createClient();
+  await supabase.from("orcamentos").update({ cliente_id: clienteId }).eq("id", id);
+  revalidatePath(`/clientes/${clienteId}`);
+  atualizarTelas(id);
+}
+
 /** Cadastra quem pediu o orçamento como cliente (nome, celular e a ideia nas observações). */
 export async function virarCliente(id: string) {
   const supabase = await createClient();

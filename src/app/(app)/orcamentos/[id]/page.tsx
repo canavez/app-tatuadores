@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Archive, ArchiveRestore, UserPlus, UserRound } from "lucide-react";
+import { Archive, ArchiveRestore, Link2, UserPlus, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { linksDasFotos } from "@/lib/fotos";
 import { nomeDoUsuario } from "@/lib/usuario";
@@ -8,7 +8,8 @@ import { formatarTelefone, linkResposta, quandoChegou, type Orcamento } from "@/
 import { Topo } from "@/components/topo";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { BotaoWhatsApp } from "../botao-whatsapp";
-import { excluirOrcamento, mudarStatus, virarCliente } from "../actions";
+import { excluirOrcamento, ligarCliente, mudarStatus, virarCliente } from "../actions";
+import { clientesDosOrcamentos } from "../clientes";
 
 export default async function OrcamentoPage({ params, searchParams }: PageProps<"/orcamentos/[id]">) {
   const { id } = await params;
@@ -24,7 +25,8 @@ export default async function OrcamentoPage({ params, searchParams }: PageProps<
   ]);
   if (!data) notFound();
   const o = data as Orcamento;
-  const links = await linksDasFotos(o.imagens);
+  const [links, clientes] = await Promise.all([linksDasFotos(o.imagens), clientesDosOrcamentos([o])]);
+  const doCliente = clientes.get(o.id);
   const quando = new Date(o.criado_em).toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -41,6 +43,25 @@ export default async function OrcamentoPage({ params, searchParams }: PageProps<
         {erro === "cliente" && <p className="aviso-erro">Não foi possível cadastrar o cliente. Tente novamente.</p>}
 
         <BotaoWhatsApp id={o.id} href={linkResposta(o, nomeDoUsuario(usuario.data.user))} grande />
+
+        {doCliente && !doCliente.ligado && (
+          <section className="card flex flex-col gap-3 border-accent/40 text-sm">
+            <p>
+              <span className="font-semibold">{doCliente.cliente.nome}</span> já é seu cliente (mesmo celular).
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <form action={ligarCliente.bind(null, o.id, doCliente.cliente.id)}>
+                <button type="submit" className="botao gap-2">
+                  <Link2 className="size-4" />
+                  Ligar à ficha do cliente
+                </button>
+              </form>
+              <Link href={`/clientes/${doCliente.cliente.id}`} className="botao-secundario">
+                Ver ficha
+              </Link>
+            </div>
+          </section>
+        )}
 
         <section className="card flex flex-col gap-4">
           <div>
@@ -100,13 +121,13 @@ export default async function OrcamentoPage({ params, searchParams }: PageProps<
           {o.cliente_id ? (
             <Link href={`/clientes/${o.cliente_id}`} className="botao-secundario gap-2 py-3">
               <UserRound className="size-4" />
-              Ver cliente
+              Ver ficha{doCliente ? ` de ${doCliente.cliente.nome.split(" ")[0]}` : " do cliente"}
             </Link>
           ) : (
             <form action={virarCliente.bind(null, o.id)}>
               <button type="submit" className="botao-secundario w-full gap-2 py-3">
                 <UserPlus className="size-4" />
-                Cadastrar como cliente
+                {doCliente ? "É outra pessoa: cadastrar como novo cliente" : "Cadastrar como cliente"}
               </button>
             </form>
           )}

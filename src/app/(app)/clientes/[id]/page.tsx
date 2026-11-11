@@ -17,6 +17,7 @@ import { BotaoExcluir } from "@/components/botao-excluir";
 import { BotaoIcone, Topo } from "@/components/topo";
 import { ResumoAnamnese } from "@/components/resumo-anamnese";
 import { excluirCliente } from "../actions";
+import { quandoChegou } from "@/lib/orcamentos";
 import { buscarAnamnese, buscarCliente } from "./buscar-cliente";
 
 export default async function ClientePage({ params }: PageProps<"/clientes/[id]">) {
@@ -39,6 +40,12 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
     })[];
     termos: { id: string } | { id: string }[] | null;
   })[];
+
+  const { data: pedidos } = await supabase
+    .from("orcamentos")
+    .select("id, descricao, local_corpo, criado_em")
+    .eq("cliente_id", id)
+    .order("criado_em", { ascending: false });
 
   const todasSessoes = tatuagens.flatMap((t) => t.sessoes);
   const totalSessoes = todasSessoes.filter((s) => s.status !== "cancelado").length;
@@ -148,6 +155,28 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
               </div>
             )}
           </dl>
+        )}
+
+        {pedidos && pedidos.length > 0 && (
+          <>
+            <h2 className="mt-2 text-xs font-medium uppercase tracking-wide text-muted">Pedidos de orçamento</h2>
+            <ul className="card divide-y divide-border p-0">
+              {pedidos.map((p) => (
+                <li key={p.id}>
+                  <Link href={`/orcamentos/${p.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-background">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm">{p.descricao}</span>
+                      <span className="block text-xs text-muted">
+                        {quandoChegou(p.criado_em)}
+                        {p.local_corpo && ` · ${p.local_corpo}`}
+                      </span>
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-muted" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
 
         <h2 className="mt-2 text-xs font-medium uppercase tracking-wide text-muted">Tatuagens</h2>
