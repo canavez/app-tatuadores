@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ChevronRight, Images, Inbox, Settings } from "lucide-react";
+import { ChevronRight, Images, Inbox, Settings, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { nomeDoUsuario } from "@/lib/usuario";
 import { linkDaPagina, linkResposta, quandoChegou, type Orcamento } from "@/lib/orcamentos";
 import { BotaoIcone, Topo } from "@/components/topo";
 import { BotaoWhatsApp } from "./botao-whatsapp";
 import { CompartilharLink } from "./compartilhar-link";
+import { clientesDosOrcamentos } from "./clientes";
 
 const FILTROS = [
   { valor: "abertos", rotulo: "Abertos" },
@@ -31,6 +32,7 @@ export default async function OrcamentosPage({ searchParams }: PageProps<"/orcam
   ]);
   const orcamentos = (data ?? []) as Orcamento[];
   const nome = perfil ? nomeDoUsuario(usuario.data.user) : "";
+  const clientes = await clientesDosOrcamentos(orcamentos);
   const novos = orcamentos.filter((o) => o.status === "novo").length;
 
   return (
@@ -108,6 +110,12 @@ export default async function OrcamentosPage({ searchParams }: PageProps<"/orcam
                       {quandoChegou(o.criado_em)}
                       {o.local_corpo && ` · ${o.local_corpo}`}
                     </span>
+                    {clientes.has(o.id) && (
+                      <span className="mt-1 flex items-center gap-1 text-xs text-lavanda">
+                        <UserRound className="size-3.5" />
+                        Já é seu cliente · {clientes.get(o.id)!.cliente.nome}
+                      </span>
+                    )}
                     <span className="mt-1.5 line-clamp-2 block text-sm">{o.descricao}</span>
                   </span>
                   <ChevronRight className="mt-1 size-4 shrink-0 text-muted" />
