@@ -36,13 +36,15 @@ export async function excluirConta(_: EstadoExcluir, formData: FormData): Promis
 
   // As fotos ficam no Storage, fora das tabelas: apaga antes da conta.
   const fotos = supabase.storage.from(ESPACO_FOTOS);
-  const [{ data: raiz }, { data: clientes }] = await Promise.all([
+  const [{ data: raiz }, { data: clientes }, { data: orcamentos }] = await Promise.all([
     fotos.list(user.id),
     fotos.list(`${user.id}/clientes`, { limit: 10_000 }),
+    fotos.list(`${user.id}/orcamentos`, { limit: 10_000 }),
   ]);
   const caminhos = [
     ...(raiz ?? []).filter((f) => f.id).map((f) => `${user.id}/${f.name}`),
     ...(clientes ?? []).map((f) => `${user.id}/clientes/${f.name}`),
+    ...(orcamentos ?? []).map((f) => `${user.id}/orcamentos/${f.name}`),
   ];
   if (caminhos.length > 0) {
     const { error } = await fotos.remove(caminhos);

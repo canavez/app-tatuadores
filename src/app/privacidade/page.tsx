@@ -4,7 +4,7 @@ import { PaginaPublica, Secao } from "@/components/pagina-publica";
 
 export const metadata: Metadata = { title: "Política de privacidade · Ravenn" };
 
-const ATUALIZADA_EM = "4 de novembro de 2026";
+const ATUALIZADA_EM = "7 de novembro de 2026";
 
 /** Página pública (sem login): a App Store e a Play Store pedem o link dela. */
 export default function PrivacidadePage() {
@@ -58,6 +58,14 @@ export default function PrivacidadePage() {
             <span className="text-foreground">Termos de consentimento:</span>{" "}
             texto aceito, nome, CPF e assinatura do cliente (e do responsável,
             quando menor de idade).
+          </li>
+          <li>
+            <span className="text-foreground">Pedidos de orçamento:</span>{" "}
+            quem pede um orçamento pela página pública de um tatuador
+            (ravenn.me/link-do-tatuador) informa nome, celular, a ideia da
+            tatuagem, o lugar do corpo e, se quiser, imagens de referência.
+            Esses dados vão só para aquele tatuador, para responder o pedido, e
+            ele pode apagá-los quando quiser.
           </li>
           <li>
             <span className="text-foreground">Trabalho:</span> tatuagens,

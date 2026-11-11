@@ -3,6 +3,7 @@ import {
   ChevronRight,
   FileSignature,
   HeartPulse,
+  Inbox,
   MessageCircle,
   Package,
   Plus,
@@ -24,7 +25,7 @@ import { formatarData } from "@/lib/clientes";
 import { alertas, type Anamnese } from "@/lib/anamnese";
 import { reais, saldoSessao, somar } from "@/lib/financeiro";
 import { acabando, type ItemEstoque } from "@/lib/estoque";
-import { Topo } from "@/components/topo";
+import { BotaoIcone, Topo } from "@/components/topo";
 import { linkDaFoto } from "@/lib/fotos";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
 import { CardSessao, type SessaoDoCard } from "@/components/card-sessao";
@@ -141,7 +142,7 @@ export default async function HojePage() {
   const agora = new Date().toISOString();
 
   const supabase = await createClient();
-  const [{ data, error }, { data: estoque }, { data: maisAdiante }, usuario] = await Promise.all([
+  const [{ data, error }, { data: estoque }, { data: maisAdiante }, usuario, { count: orcamentosNovos }] = await Promise.all([
     // Hoje e os próximos 7 dias.
     supabase
       .from("sessoes")
@@ -163,6 +164,7 @@ export default async function HojePage() {
       .order("inicio")
       .limit(1),
     supabase.auth.getUser(),
+    supabase.from("orcamentos").select("id", { count: "exact", head: true }).eq("status", "novo"),
   ]);
   const sessoes = (data ?? []) as unknown as SessaoDoDia[];
   const primeiroNome = nomeDoUsuario(usuario.data.user).split(" ")[0];
@@ -198,6 +200,18 @@ export default async function HojePage() {
       <Topo
         titulo={primeiroNome ? `${saudacao()}, ${primeiroNome}` : saudacao()}
         subtitulo={`${nomeDoDia(dia)} · ${resumoDia}`}
+        acoes={
+          <BotaoIcone href="/orcamentos" rotulo="Orçamentos">
+            <span className="relative">
+              <Inbox className="size-5" />
+              {!!orcamentosNovos && (
+                <span className="absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">
+                  {orcamentosNovos > 9 ? "9+" : orcamentosNovos}
+                </span>
+              )}
+            </span>
+          </BotaoIcone>
+        }
       />
 
       <div className="flex flex-col gap-5">
@@ -210,6 +224,16 @@ export default async function HojePage() {
               {assinatura.dias === 1 ? "amanhã" : `em ${assinatura.dias} dias`}.
             </span>
             <span className="shrink-0 font-semibold text-lavanda">Ver assinatura</span>
+          </Link>
+        )}
+
+        {!!orcamentosNovos && (
+          <Link href="/orcamentos" className="card flex items-center gap-3 border-accent/40 py-3 text-sm">
+            <Inbox className="size-5 shrink-0 text-lavanda" />
+            <span className="flex-1">
+              {orcamentosNovos === 1 ? "1 pedido de orçamento novo" : `${orcamentosNovos} pedidos de orçamento novos`}
+            </span>
+            <span className="shrink-0 font-semibold text-lavanda">Ver</span>
           </Link>
         )}
 
