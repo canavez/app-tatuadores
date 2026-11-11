@@ -1,4 +1,4 @@
-# Compila o app de iPhone num Mac na nuvem (Codemagic) e manda para o TestFlight.
+# Compila os apps no Codemagic: iPhone (num Mac na nuvem) → TestFlight, e Android → Google Play.
 # Roda quando você clica em "Start new build" no Codemagic (não a cada push):
 # mudanças só no site chegam no app sozinhas; versão nova só para coisa nativa.
 #
@@ -49,3 +49,47 @@ workflows:
         # Para testadores de fora (grupo externo), mude para true: aí passa pela revisão beta.
         submit_to_testflight: false
         submit_to_app_store: false
+
+  # App de Android: gera o .aab assinado com a chave de envio e manda para o teste interno
+  # da Play Store. Precisa, no Codemagic:
+  # - a chave de envio em Code signing identities → Android keystores, com a referência
+  #   "ravenn_upload" (o arquivo ravenn-upload.jks e as senhas);
+  # - o grupo de variáveis "google_play" com GCLOUD_SERVICE_ACCOUNT_CREDENTIALS (secreta): o
+  #   JSON da conta de serviço que tem acesso ao app no Play Console.
+  # O Google exige que o PRIMEIRO .aab seja enviado à mão no Play Console (baixe em Artifacts);
+  # até lá o passo de publicar falha, mas o .aab fica pronto. Veja docs/ANDROID.md.
+  android-google-play:
+    name: Android → Google Play
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        - ravenn_upload
+      groups:
+        - google_play
+      node: 24
+      java: 21
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Atualizar o projeto Android (plugins e configuração)
+        script: npx cap sync android
+      - name: Número da versão (um a mais que o último na Play Store)
+        script: |
+          ULTIMO=$(google-play get-latest-build-number --package-name "me.ravenn.app" 2>/dev/null || echo "$BUILD_NUMBER")
+          echo "VERSAO_ANDROID=$((ULTIMO + 1))" >> $CM_ENV
+      - name: Gerar o .aab
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        # Teste interno (até 100 pessoas, sem revisão demorada). Para o teste fechado
+        # exigido antes da produção, mude para "alpha".
+        track: internal
+        # Enquanto o app nunca foi publicado, o Google só aceita versões como rascunho.
+        submit_as_draft: true

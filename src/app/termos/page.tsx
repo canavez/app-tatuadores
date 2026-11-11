@@ -48,6 +48,10 @@ export default function TermosPage() {
             <span className="text-foreground">Pelo iPhone:</span> quando disponível, a assinatura feita pelo app é
             cobrada pela Apple, na sua conta Apple, e segue também as regras da App Store.
           </li>
+          <li>
+            <span className="text-foreground">Pelo Android:</span> quando disponível, a assinatura feita pelo app é
+            cobrada pelo Google, na sua conta Google Play, e segue também as regras do Google Play.
+          </li>
         </ul>
         <p>
           Se uma cobrança não for aprovada, tentamos de novo por alguns dias. Sem pagamento, a assinatura vence e o
@@ -62,7 +66,8 @@ export default function TermosPage() {
       <Secao titulo="4. Cancelamento">
         <p>
           Você pode cancelar quando quiser, sem multa: pelo site, em Conta → Assinatura → Gerenciar assinatura; pelo
-          iPhone, nos Ajustes do iPhone → seu nome → Assinaturas. O acesso continua até o fim do mês já pago e não
+          iPhone, nos Ajustes do iPhone → seu nome → Assinaturas; pelo Android, na Play Store → seu perfil →
+          Pagamentos e assinaturas → Assinaturas. O acesso continua até o fim do mês já pago e não
           há nova cobrança.
         </p>
       </Secao>
@@ -76,7 +81,8 @@ export default function TermosPage() {
         <p>
           Depois desse prazo, os meses já pagos não são devolvidos, nem em parte, mas você pode cancelar para não
           haver as próximas cobranças. Assinaturas feitas pelo iPhone são reembolsadas pela própria Apple, em
-          reportaproblem.apple.com.
+          reportaproblem.apple.com, e as feitas pelo Android seguem a política de reembolso do Google Play
+          (support.google.com/googleplay).
         </p>
       </Secao>
 

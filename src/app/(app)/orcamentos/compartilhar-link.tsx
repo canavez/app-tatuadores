@@ -2,14 +2,16 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { Check, Copy, Share2 } from "lucide-react";
+import { compartilharLink } from "@/lib/celular";
 
 /** Link da página com botões de copiar e compartilhar (bio do Instagram, WhatsApp...). */
 export function CompartilharLink({ link }: { link: string }) {
   const [copiado, setCopiado] = useState(false);
   // Só no aparelho (no servidor não existe navigator): evita diferença na hidratação.
+  // No app de Android não há navigator.share, mas o plugin nativo compartilha.
   const podeCompartilhar = useSyncExternalStore(
     () => () => {},
-    () => "share" in navigator,
+    () => typeof navigator.share === "function" || (/android/i.test(navigator.userAgent) && "Capacitor" in window),
     () => false,
   );
 
@@ -35,7 +37,7 @@ export function CompartilharLink({ link }: { link: string }) {
       {podeCompartilhar && (
         <button
           type="button"
-          onClick={() => navigator.share({ url: link }).catch(() => {})}
+          onClick={() => compartilharLink(link).catch(() => {})}
           className="botao-secundario shrink-0 py-1.5"
           aria-label="Compartilhar link"
         >
