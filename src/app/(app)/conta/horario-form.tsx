@@ -2,10 +2,12 @@
 
 import { useActionState } from "react";
 import { semLimpar } from "@/lib/formulario";
+import { useAvisoDoForm } from "@/components/avisos";
 import { salvarHorario } from "./actions";
 
 export function HorarioForm({ inicio, fim }: { inicio: string; fim: string }) {
   const [estado, acao, pendente] = useActionState(salvarHorario, undefined);
+  useAvisoDoForm(estado);
 
   return (
     <form {...semLimpar(acao)} className="card flex flex-col gap-3">
@@ -24,7 +26,6 @@ export function HorarioForm({ inicio, fim }: { inicio: string; fim: string }) {
         </label>
       </div>
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
-      {estado?.mensagem && <p className="aviso-ok">{estado.mensagem}</p>}
       <button type="submit" className="botao self-end" disabled={pendente}>
         {pendente ? "Salvando..." : "Salvar horário"}
       </button>

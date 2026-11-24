@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { avisar } from "@/lib/aviso";
 import { ESPACO_FOTOS } from "@/lib/fotos";
 import { formatarTelefone, type StatusOrcamento } from "@/lib/orcamentos";
 
@@ -23,6 +24,7 @@ export async function mudarStatus(id: string, status: StatusOrcamento) {
   const supabase = await createClient();
   await supabase.from("orcamentos").update({ status }).eq("id", id);
   atualizarTelas(id);
+  await avisar(status === "arquivado" ? "orcamento-arquivado" : "orcamento-reaberto");
 }
 
 export async function excluirOrcamento(id: string) {
@@ -32,6 +34,7 @@ export async function excluirOrcamento(id: string) {
   await supabase.from("orcamentos").delete().eq("id", id);
   revalidatePath("/orcamentos");
   revalidatePath("/hoje");
+  await avisar("orcamento-excluido");
   redirect("/orcamentos");
 }
 
@@ -65,5 +68,6 @@ export async function virarCliente(id: string) {
   await supabase.from("orcamentos").update({ cliente_id: cliente.id }).eq("id", id);
   revalidatePath("/clientes");
   atualizarTelas(id);
+  await avisar("virou-cliente");
   redirect(`/clientes/${cliente.id}`);
 }

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Minus, Plus } from "lucide-react";
+import { ListFilter, Minus, Package, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIAS_ESTOQUE, acabando, type CategoriaEstoque, type ItemEstoque } from "@/lib/estoque";
 import { BotaoIcone, Topo } from "@/components/topo";
 import { ajustarQuantidade } from "./actions";
+import { Vazio } from "@/components/vazio";
 
 // Dentro de "Cartuchos", "Cartucho 11RS" aparece só como "11RS" (idem agulhas e biqueiras).
 const PREFIXO: Partial<Record<CategoriaEstoque, string>> = {
@@ -66,16 +67,12 @@ export default async function EstoquePage({ searchParams }: PageProps<"/estoque"
         {error && <p className="aviso-erro">Erro ao carregar o estoque.</p>}
 
         {todos.length === 0 && !error && (
-          <div className="card flex flex-col items-center gap-3 py-10 text-center">
-            <p className="font-medium">Monte seu estoque</p>
-            <p className="max-w-xs text-sm text-muted">
-              Escolha numa lista pronta os materiais que você usa: cartuchos, agulhas, luvas, batoques e mais.
-            </p>
-            <Link href="/estoque/adicionar" className="botao gap-2">
-              <Plus className="size-4" />
-              Escolher itens
-            </Link>
-          </div>
+          <Vazio
+            Icone={Package}
+            titulo="Monte seu estoque"
+            texto="Escolha numa lista pronta os materiais que você usa: cartuchos, agulhas, luvas, batoques e mais."
+            acao={{ href: "/estoque/adicionar", rotulo: "Escolher itens", Icone: Plus }}
+          />
         )}
 
         {todos.length > 0 && (
@@ -106,7 +103,7 @@ export default async function EstoquePage({ searchParams }: PageProps<"/estoque"
         )}
 
         {todos.length > 0 && grupos.length === 0 && (
-          <div className="card py-8 text-center text-sm text-muted">Nenhum item neste filtro.</div>
+          <Vazio compacto Icone={ListFilter} titulo="Nenhum item neste filtro." />
         )}
 
         {grupos.map((g) => (

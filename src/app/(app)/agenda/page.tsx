@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { CalendarClock, CalendarX, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   dataValida,
@@ -24,6 +24,7 @@ import {
 } from "./faixa-dias";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { SELECT_SESSAO_COMPLETA, type SessaoCompleta } from "./dados";
+import { Vazio } from "@/components/vazio";
 
 // Semanas antes e depois da semana escolhida que a faixa de dias deixa rolar.
 const SEMANAS = 8;
@@ -110,15 +111,15 @@ export default async function AgendaPage({
       {error && <p className="aviso-erro">Erro ao carregar a agenda.</p>}
 
       {!error && linha.length === 0 && (
-        <div className="card py-10 text-center text-muted">
-          {dia < diaHoje
-            ? "Nenhuma sessão neste dia."
-            : "Sem horário livre neste dia."}
-        </div>
+        <Vazio
+          compacto
+          Icone={dia < diaHoje ? CalendarX : CalendarClock}
+          titulo={dia < diaHoje ? "Nenhuma sessão neste dia." : "Sem horário livre neste dia."}
+        />
       )}
 
       {/* Linha do tempo: sessões com altura pela duração e os horários livres entre elas. */}
-      <ul className="flex flex-col gap-2">
+      <ul className="cascata flex flex-col gap-2">
         {linha.map((item) =>
           item.tipo === "sessao" ? (
             <li key={item.sessao.id}>
@@ -148,7 +149,7 @@ export default async function AgendaPage({
           <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
             Canceladas
           </h3>
-          <ul className="flex flex-col gap-2">
+          <ul className="cascata flex flex-col gap-2">
             {canceladas.map((s) => (
               <li key={s.id}>
                 <CardSessao sessao={s} />

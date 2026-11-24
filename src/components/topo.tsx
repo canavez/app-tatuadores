@@ -17,13 +17,14 @@ type Props = {
  */
 export function Topo({ titulo, voltar, subtitulo, acoes }: Props) {
   return (
-    <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-border bg-background px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] max-md:instalado:pt-[calc(env(safe-area-inset-top)+1.75rem)] md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pt-0 print:static print:border-0">
+    <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-border bg-background/80 px-4 backdrop-blur-xl pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] max-md:instalado:pt-[calc(env(safe-area-inset-top)+1.75rem)] md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pt-0 md:backdrop-blur-none print:static print:border-0">
       <div className="flex min-h-10 items-center gap-2">
         {voltar && (
           <Link
             href={voltar}
+            transitionTypes={["voltar"]}
             aria-label="Voltar"
-            className="-ml-2 flex size-10 shrink-0 print:hidden items-center justify-center rounded-full text-foreground hover:bg-surface"
+            className="-ml-2 flex size-10 shrink-0 print:hidden items-center justify-center rounded-full text-foreground transition hover:bg-surface active:scale-90 active:bg-surface"
           >
             <ChevronLeft className="size-6" />
           </Link>
@@ -55,7 +56,7 @@ export function BotaoIcone({
       href={href}
       aria-label={rotulo}
       title={rotulo}
-      className="flex size-10 items-center justify-center rounded-full text-foreground hover:bg-surface"
+      className="flex size-10 items-center justify-center rounded-full text-foreground transition hover:bg-surface active:scale-90 active:bg-surface"
     >
       {children}
     </Link>

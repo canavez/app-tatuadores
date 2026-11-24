@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { semLimpar } from "@/lib/formulario";
+import { useAvisoDoForm } from "@/components/avisos";
 import { limparSlug } from "@/lib/orcamentos";
 import { salvarPagina } from "./actions";
 
@@ -9,6 +10,7 @@ type Props = { slug: string; nome: string; bio: string; aceitando: boolean; exis
 
 export function PaginaForm({ slug, nome, bio, aceitando, existe }: Props) {
   const [estado, acao, pendente] = useActionState(salvarPagina, undefined);
+  useAvisoDoForm(estado);
   const [link, setLink] = useState(slug);
 
   return (
@@ -60,7 +62,6 @@ export function PaginaForm({ slug, nome, bio, aceitando, existe }: Props) {
       <p className="text-xs text-muted">A foto da página é a mesma da sua Conta.</p>
 
       {estado?.erro && <p className="aviso-erro">{estado.erro}</p>}
-      {estado?.mensagem && <p className="aviso-ok">{estado.mensagem}</p>}
       <button type="submit" className="botao self-end" disabled={pendente}>
         {pendente ? "Salvando..." : existe ? "Salvar" : "Criar minha página"}
       </button>
