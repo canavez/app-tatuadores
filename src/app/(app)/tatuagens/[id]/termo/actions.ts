@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { avisar } from "@/lib/aviso";
 import { calcularIdade } from "@/lib/clientes";
 import { VERSAO_TERMO, textoDoTermo } from "@/lib/termo";
 import { buscarTatuagemETermo, destinoSeguro, urlDoTermo } from "./dados";
@@ -66,11 +67,13 @@ export async function assinarTermo(
   if (error) return { erro: "Não foi possível salvar o termo. Tente novamente." };
 
   revalidatePath(`/clientes/${tatuagem.cliente.id}`);
+  await avisar("termo-assinado");
   redirect(urlDoTermo(tatuagemId, destinoSeguro(de)));
 }
 
 export async function excluirTermo(tatuagemId: string, de: string | null) {
   const supabase = await createClient();
   await supabase.from("termos").delete().eq("tatuagem_id", tatuagemId);
+  await avisar("termo-excluido");
   redirect(urlDoTermo(tatuagemId, destinoSeguro(de)));
 }

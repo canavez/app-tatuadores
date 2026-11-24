@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { avisar } from "@/lib/aviso";
 import { ESPACO_FOTOS } from "@/lib/fotos";
 import { CONDICOES, TEXTOS } from "@/lib/anamnese";
 
@@ -63,6 +64,7 @@ export async function salvarCliente(
   }
 
   revalidatePath("/clientes");
+  await avisar("cliente-salvo");
   redirect(`/clientes/${resultado.data.id}`);
 }
 
@@ -72,5 +74,6 @@ export async function excluirCliente(id: string) {
   if (data?.foto) await supabase.storage.from(ESPACO_FOTOS).remove([data.foto]);
   await supabase.from("clientes").delete().eq("id", id);
   revalidatePath("/clientes");
+  await avisar("cliente-excluido");
   redirect("/clientes");
 }

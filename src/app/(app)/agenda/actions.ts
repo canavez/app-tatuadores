@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { avisar } from "@/lib/aviso";
 import { dataValida, ehStatus, paraInstante, type StatusSessao } from "@/lib/agenda";
 import { ehForma, ehTipo, lerReais, taxaDoPagamento } from "@/lib/financeiro";
 import { buscarConfiguracoes } from "@/lib/configuracoes";
@@ -104,6 +105,7 @@ export async function salvarSessao(
   revalidatePath("/agenda");
   if (clienteCriado) revalidatePath("/clientes");
   revalidatePath(`/clientes/${clienteId}`);
+  await avisar("sessao-salva");
   redirect(`/agenda/${resultado.data.id}`);
 }
 
@@ -113,6 +115,7 @@ export async function mudarStatus(id: string, status: StatusSessao) {
   // Reativar uma sessão cancelada pode bater com outra que ocupou o horário.
   if (error?.code === "23P01") redirect(`/agenda/${id}?erro=conflito`);
   revalidatePath("/agenda");
+  await avisar("status-mudado");
   redirect(`/agenda/${id}`);
 }
 
@@ -120,6 +123,7 @@ export async function excluirSessao(id: string) {
   const supabase = await createClient();
   await supabase.from("sessoes").delete().eq("id", id);
   revalidatePath("/agenda");
+  await avisar("sessao-excluida");
   redirect("/agenda");
 }
 
@@ -158,6 +162,7 @@ export async function registrarPagamento(
   }
 
   revalidatePath("/", "layout");
+  await avisar("pagamento-registrado");
   redirect(`/agenda/${sessaoId}`);
 }
 
@@ -165,6 +170,7 @@ export async function excluirPagamento(id: string, sessaoId: string) {
   const supabase = await createClient();
   await supabase.from("pagamentos").delete().eq("id", id);
   revalidatePath("/", "layout");
+  await avisar("pagamento-excluido");
   redirect(`/agenda/${sessaoId}`);
 }
 
@@ -215,5 +221,6 @@ export async function salvarMateriais(
   }
 
   revalidatePath("/", "layout");
+  await avisar("materiais-salvos");
   redirect(`/agenda/${sessaoId}`);
 }
