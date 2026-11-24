@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  CalendarPlus,
-  ChevronRight,
-  CircleCheck,
-  FileSignature,
-  MessageCircle,
-  Pencil,
-} from "lucide-react";
+import { CalendarPlus, ChevronRight, CircleCheck, FileSignature, MessageCircle, PenTool, Pencil } from "lucide-react";
 import { calcularIdade, formatarData, linkWhatsApp } from "@/lib/clientes";
 import { STATUS, diaDaSemanaCurto, partesLocais, type Sessao, type Tatuagem } from "@/lib/agenda";
 import { createClient } from "@/lib/supabase/server";
@@ -19,6 +12,7 @@ import { ResumoAnamnese } from "@/components/resumo-anamnese";
 import { excluirCliente } from "../actions";
 import { quandoChegou } from "@/lib/orcamentos";
 import { buscarAnamnese, buscarCliente } from "./buscar-cliente";
+import { Vazio } from "@/components/vazio";
 
 export default async function ClientePage({ params }: PageProps<"/clientes/[id]">) {
   const { id } = await params;
@@ -182,7 +176,7 @@ export default async function ClientePage({ params }: PageProps<"/clientes/[id]"
         <h2 className="mt-2 text-xs font-medium uppercase tracking-wide text-muted">Tatuagens</h2>
 
         {tatuagens.length === 0 ? (
-          <div className="card py-8 text-center text-sm text-muted">Nenhuma tatuagem ainda.</div>
+          <Vazio compacto Icone={PenTool} titulo="Nenhuma tatuagem ainda." />
         ) : (
           tatuagens.map((t) => (
             <section key={t.id} className="card p-0">

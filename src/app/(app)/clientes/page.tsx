@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Plus, Search, SearchX, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatarData, type Cliente } from "@/lib/clientes";
 import { diaDaSemanaCurto, partesLocais } from "@/lib/agenda";
@@ -7,6 +7,7 @@ import { Avatar } from "@/components/avatar";
 import { linksDasFotos } from "@/lib/fotos";
 import { Topo } from "@/components/topo";
 import { BotaoFlutuante } from "@/components/botao-flutuante";
+import { Vazio } from "@/components/vazio";
 
 export default async function ClientesPage({ searchParams }: PageProps<"/clientes">) {
   const { q } = await searchParams;
@@ -91,20 +92,20 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
       {error && <p className="aviso-erro">Erro ao carregar clientes.</p>}
 
       {!error && clientes.length === 0 && (
-        <div className="card flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-muted">
-            {busca ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado ainda."}
-          </p>
-          {!busca && (
-            <Link href="/clientes/novo" className="botao-secundario">
-              Cadastrar o primeiro
-            </Link>
-          )}
-        </div>
+        busca ? (
+          <Vazio Icone={SearchX} titulo="Nenhum cliente encontrado." texto="Confira o nome ou busque pelo telefone ou Instagram." />
+        ) : (
+          <Vazio
+            Icone={Users}
+            titulo="Nenhum cliente cadastrado ainda."
+            texto="Seus clientes ficam aqui, com a ficha, a anamnese e as tatuagens de cada um."
+            acao={{ href: "/clientes/novo", rotulo: "Cadastrar o primeiro", Icone: Plus }}
+          />
+        )
       )}
 
       {clientes.length > 0 && (
-        <ul className="card divide-y divide-border p-0">
+        <ul className="cascata card divide-y divide-border p-0">
           {clientes.map((c) => {
             const prox = proxima.get(c.id);
             const ult = ultima.get(c.id);

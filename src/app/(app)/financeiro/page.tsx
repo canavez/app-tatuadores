@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChartColumn, ChevronLeft, ChevronRight, Plus, Settings } from "lucide-react";
+import { ChartColumn, ChevronLeft, ChevronRight, CircleCheck, Plus, Receipt, Settings, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { hoje, mesAno, partesLocais } from "@/lib/agenda";
 import { formatarData } from "@/lib/clientes";
@@ -17,6 +17,8 @@ import { buscarConfiguracoes } from "@/lib/configuracoes";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { excluirDespesa } from "./actions";
 import { BotaoIcone, Topo } from "@/components/topo";
+import { Vazio } from "@/components/vazio";
+import { NumeroAnimado } from "@/components/numero-animado";
 
 type PagamentoDoMes = Pagamento & {
   sessao: { id: string; tatuagem: { descricao: string; cliente: { nome: string } } };
@@ -172,7 +174,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
           <p
             className={`text-3xl font-semibold tabular-nums ${lucro < 0 ? "text-red-400" : "text-green-400"}`}
           >
-            {reais(lucro)}
+            <NumeroAnimado valor={lucro} />
           </p>
           <Linha rotulo="Recebido" valor={recebido} />
           {sinais > 0 && <p className="-mt-1 text-xs text-muted tabular-nums">{reais(sinais)} em sinais</p>}
@@ -187,7 +189,7 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
 
           {porForma.length > 0 && (
             <>
-              <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
+              <div className="crescer mt-1 flex h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
                 {porForma.map((f) => (
                   <div key={f.forma} className={COR_FORMA[f.forma]} style={{ width: `${(f.total / recebido) * 100}%` }} />
                 ))}
@@ -215,16 +217,20 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
         </section>
 
         <div className="grid grid-cols-2 gap-3">
-          <Link href={urlAba("areceber")} className="card active:scale-[0.99]">
+          <Link href={urlAba("areceber")} className="card">
             <p className="text-xs text-muted">A receber</p>
-            <p className="text-lg font-semibold tabular-nums text-amber-400">{reais(totalAReceber)}</p>
+            <p className="text-lg font-semibold tabular-nums text-amber-400">
+              <NumeroAnimado valor={totalAReceber} />
+            </p>
             <p className="text-xs text-muted">
               {aReceber.length} {aReceber.length === 1 ? "sessão" : "sessões"}
             </p>
           </Link>
-          <Link href={urlAba("despesas")} className="card active:scale-[0.99]">
+          <Link href={urlAba("despesas")} className="card">
             <p className="text-xs text-muted">Despesas</p>
-            <p className="text-lg font-semibold tabular-nums">{reais(totalDespesas)}</p>
+            <p className="text-lg font-semibold tabular-nums">
+              <NumeroAnimado valor={totalDespesas} />
+            </p>
             <p className="text-xs text-muted">neste mês</p>
           </Link>
         </div>
@@ -251,9 +257,9 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
 
         {aba === "recebidos" &&
           (pagamentos.length === 0 ? (
-            <div className="card py-8 text-center text-sm text-muted">Nenhum pagamento neste mês.</div>
+            <Vazio compacto Icone={Wallet} titulo="Nenhum pagamento neste mês." />
           ) : (
-            <ul className="card divide-y divide-border p-0">
+            <ul className="cascata card divide-y divide-border p-0">
               {pagamentos.map((p) => (
                 <li key={p.id}>
                   <Link href={`/agenda/${p.sessao.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-background">
@@ -277,9 +283,9 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
               Nova despesa
             </Link>
             {despesas.length === 0 ? (
-              <div className="card py-8 text-center text-sm text-muted">Nenhuma despesa neste mês.</div>
+              <Vazio compacto Icone={Receipt} titulo="Nenhuma despesa neste mês." />
             ) : (
-              <ul className="card divide-y divide-border p-0">
+              <ul className="cascata card divide-y divide-border p-0">
                 {despesas.map((d) => (
                   <li key={d.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                     <span className="min-w-0 flex-1">
@@ -303,9 +309,9 @@ export default async function FinanceiroPage({ searchParams }: PageProps<"/finan
 
         {aba === "areceber" &&
           (aReceber.length === 0 ? (
-            <div className="card py-8 text-center text-sm text-muted">Nada pendente.</div>
+            <Vazio compacto Icone={CircleCheck} titulo="Nada pendente." texto="Todas as sessões estão pagas." />
           ) : (
-            <ul className="card divide-y divide-border p-0">
+            <ul className="cascata card divide-y divide-border p-0">
               {aReceber.map((s) => (
                 <li key={s.id}>
                   <Link href={`/agenda/${s.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-background">

@@ -60,16 +60,204 @@ body {
     @apply rounded-xl border border-border bg-background px-3 py-2.5 text-base font-normal outline-none placeholder:text-muted/60 focus:border-accent;
   }
   .botao {
-    @apply inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:opacity-90 active:scale-[0.96] active:opacity-90 disabled:opacity-50 disabled:active:scale-100;
   }
   .botao-secundario {
-    @apply inline-flex items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium transition hover:border-surface-alto hover:bg-surface-alto;
+    @apply inline-flex items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium transition hover:border-surface-alto hover:bg-surface-alto active:scale-[0.96] active:bg-surface-alto;
   }
   .aviso-erro {
     @apply rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400;
   }
   .aviso-ok {
     @apply rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400;
+  }
+}
+
+/* ---------- Movimento ---------- */
+
+/* Cards que são links afundam um pouco ao toque (como nos apps da Apple). */
+a.card {
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+a.card:active {
+  transform: scale(0.98);
+  background-color: var(--surface-alto);
+}
+
+/* Esqueleto de carregamento: caixa cinza com um brilho passando. */
+.esqueleto {
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-alto) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: esqueleto-brilho 1.3s linear infinite;
+}
+@keyframes esqueleto-brilho {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Listas que entram em cascata: cada item sobe um pouco depois do anterior. */
+.cascata > * {
+  animation: subir 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.cascata > :nth-child(2) { animation-delay: 40ms; }
+.cascata > :nth-child(3) { animation-delay: 80ms; }
+.cascata > :nth-child(4) { animation-delay: 120ms; }
+.cascata > :nth-child(5) { animation-delay: 160ms; }
+.cascata > :nth-child(6) { animation-delay: 200ms; }
+.cascata > :nth-child(n + 7) { animation-delay: 240ms; }
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Barras de valores (ex.: formas de pagamento) que enchem da esquerda. */
+.crescer {
+  transform-origin: left;
+  animation: crescer 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes crescer {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Ícone da aba escolhida dá um pulinho. */
+.aba-pulo {
+  animation: aba-pulo 380ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes aba-pulo {
+  40% {
+    transform: translateY(-2px) scale(1.18);
+  }
+}
+
+/* Ícone das telas vazias flutua devagar. */
+.vazio-icone {
+  animation: flutuar 3.2s ease-in-out infinite;
+}
+@keyframes flutuar {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Balão de aviso ("Sessão salva"): sobe, fica e desce. */
+.balao-aviso {
+  animation: balao-aviso 2.8s cubic-bezier(0.2, 1.1, 0.4, 1) both;
+}
+@keyframes balao-aviso {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  12%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Troca de tela (components/transicao.tsx). */
+::view-transition {
+  pointer-events: none;
+}
+/* Abrir uma tela: a atual sai um pouco para a esquerda e a nova entra pela direita. */
+::view-transition-old(.tela-ir) {
+  animation: 180ms ease-in both tela-sumir, 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both tela-para-esquerda;
+}
+::view-transition-new(.tela-ir) {
+  animation: 220ms ease-out 60ms both tela-aparecer, 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both tela-da-direita;
+}
+/* Voltar: o contrário. */
+::view-transition-old(.tela-voltar) {
+  animation: 180ms ease-in both tela-sumir, 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both tela-para-direita;
+}
+::view-transition-new(.tela-voltar) {
+  animation: 220ms ease-out 60ms both tela-aparecer, 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both tela-da-esquerda;
+}
+/* Abas do menu: troca suave, sem deslizar. */
+::view-transition-old(.tela-aba) {
+  animation: 120ms ease-in both tela-sumir;
+}
+::view-transition-new(.tela-aba) {
+  animation: 200ms ease-out 40ms both tela-aparecer, 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both tela-subir;
+}
+@keyframes tela-sumir {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes tela-aparecer {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes tela-para-esquerda {
+  to {
+    translate: -48px 0;
+  }
+}
+@keyframes tela-da-direita {
+  from {
+    translate: 64px 0;
+  }
+}
+@keyframes tela-para-direita {
+  to {
+    translate: 64px 0;
+  }
+}
+@keyframes tela-da-esquerda {
+  from {
+    translate: -48px 0;
+  }
+}
+@keyframes tela-subir {
+  from {
+    translate: 0 8px;
+  }
+}
+
+/* Quem pediu menos movimento no celular: sem deslizar nem pular, só trocas rápidas. */
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto,
+  .cascata > *,
+  .crescer,
+  .aba-pulo,
+  .vazio-icone {
+    animation: none;
+  }
+  .balao-aviso {
+    animation-name: balao-aviso-suave;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+@keyframes balao-aviso-suave {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10%,
+  85% {
+    opacity: 1;
   }
 }
 
@@ -89,6 +277,10 @@ body {
   main > div {
     padding: 0 !important;
     max-width: none !important;
+  }
+  .cascata > *,
+  .crescer {
+    animation: none !important;
   }
 }
 

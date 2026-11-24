@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Images, Inbox, Settings, UserRound } from "lucide-react";
+import { Archive, ChevronRight, Images, Inbox, Settings, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { nomeDoUsuario } from "@/lib/usuario";
 import { linkDaPagina, linkResposta, quandoChegou, type Orcamento } from "@/lib/orcamentos";
@@ -7,6 +7,8 @@ import { BotaoIcone, Topo } from "@/components/topo";
 import { BotaoWhatsApp } from "./botao-whatsapp";
 import { CompartilharLink } from "./compartilhar-link";
 import { clientesDosOrcamentos } from "./clientes";
+import { Vazio } from "@/components/vazio";
+import { Avatar } from "@/components/avatar";
 
 const FILTROS = [
   { valor: "abertos", rotulo: "Abertos" },
@@ -88,15 +90,21 @@ export default async function OrcamentosPage({ searchParams }: PageProps<"/orcam
         </nav>
 
         {orcamentos.length === 0 ? (
-          <div className="card flex flex-col items-center gap-2 py-10 text-center text-sm text-muted">
-            <Inbox className="size-8" />
-            {arquivados ? "Nenhum orçamento arquivado." : "Nenhum pedido de orçamento por enquanto."}
-          </div>
+          arquivados ? (
+            <Vazio Icone={Archive} titulo="Nenhum orçamento arquivado." />
+          ) : (
+            <Vazio
+              Icone={Inbox}
+              titulo="Nenhum pedido de orçamento por enquanto."
+              texto="Coloque o link da sua página na bio do Instagram e os pedidos chegam aqui."
+            />
+          )
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="cascata flex flex-col gap-2">
             {orcamentos.map((o) => (
               <li key={o.id} className="card flex flex-col gap-3 p-4">
                 <Link href={`/orcamentos/${o.id}`} className="flex items-start gap-3">
+                  <Avatar nome={o.nome} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       {o.status === "novo" && (

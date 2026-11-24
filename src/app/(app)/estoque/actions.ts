@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { avisar } from "@/lib/aviso";
 import { ehCategoriaEstoque } from "@/lib/estoque";
 
 export type EstadoForm = { erro?: string } | undefined;
@@ -43,6 +44,7 @@ export async function adicionarItens(_: EstadoForm, formData: FormData): Promise
   if (error) return { erro: "Não foi possível adicionar os itens. Tente novamente." };
 
   revalidar();
+  await avisar("itens-adicionados");
   redirect("/estoque");
 }
 
@@ -76,6 +78,7 @@ export async function salvarItem(id: string, _: EstadoForm, formData: FormData):
   }
 
   revalidar();
+  await avisar("item-salvo");
   redirect("/estoque");
 }
 
@@ -83,5 +86,6 @@ export async function excluirItem(id: string) {
   const supabase = await createClient();
   await supabase.from("itens_estoque").delete().eq("id", id);
   revalidar();
+  await avisar("item-excluido");
   redirect("/estoque");
 }

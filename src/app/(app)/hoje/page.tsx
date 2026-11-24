@@ -1,15 +1,5 @@
 import Link from "next/link";
-import {
-  ChevronRight,
-  FileSignature,
-  HeartPulse,
-  Inbox,
-  MessageCircle,
-  Package,
-  Plus,
-  TriangleAlert,
-  Wallet,
-} from "lucide-react";
+import { CalendarPlus, ChevronRight, FileSignature, HeartPulse, Inbox, MessageCircle, Package, Plus, TriangleAlert, Wallet } from "lucide-react";
 import { nomeDoUsuario } from "@/lib/usuario";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -32,6 +22,7 @@ import { CardSessao, type SessaoDoCard } from "@/components/card-sessao";
 import { ProximaSessao, type Pendencia } from "./proxima-sessao";
 import { ConviteLembretes } from "@/components/controle-lembretes";
 import { buscarAssinatura } from "@/lib/assinatura";
+import { Vazio } from "@/components/vazio";
 
 type SessaoDoDia = SessaoDoCard & {
   tatuagem_id: string;
@@ -248,19 +239,18 @@ export default async function HojePage() {
             fotoUrl={await linkDaFoto(proxima.tatuagem.cliente.foto)}
           />
         ) : (
-          <div className="card flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-muted">Nenhuma sessão marcada pela frente.</p>
-            <Link href={`/agenda/nova?data=${dia}`} className="botao-secundario gap-2">
-              <Plus className="size-4" />
-              Agendar sessão
-            </Link>
-          </div>
+          <Vazio
+            Icone={CalendarPlus}
+            titulo="Agenda livre pela frente"
+            texto="Nenhuma sessão marcada pela frente. Que tal agendar a próxima?"
+            acao={{ href: `/agenda/nova?data=${dia}`, rotulo: "Agendar sessão", Icone: Plus }}
+          />
         )}
 
         {pendencias.length > 0 && (
           <section className="flex flex-col gap-2">
             <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Pendências</h2>
-            <ul className="card divide-y divide-border p-0">
+            <ul className="cascata card divide-y divide-border p-0">
               {pendencias.map((p) => (
                 <li key={p.chave}>
                   <Link href={p.href} className="flex items-center gap-3 px-4 py-3 active:bg-background">
@@ -280,7 +270,7 @@ export default async function HojePage() {
         {deHoje.length > 0 && (
           <section className="flex flex-col gap-2">
             <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Sessões de hoje</h2>
-            <ul className="flex flex-col gap-2">
+            <ul className="cascata flex flex-col gap-2">
               {deHoje.map((s) => (
                 <li key={s.id}>
                   <CardSessao sessao={s} />
@@ -293,7 +283,7 @@ export default async function HojePage() {
         {deAmanha.length > 0 && (
           <section className="flex flex-col gap-2">
             <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Amanhã · lembretes</h2>
-            <ul className="card divide-y divide-border p-0">
+            <ul className="cascata card divide-y divide-border p-0">
               {deAmanha.map((s) => {
                 const { cliente } = s.tatuagem;
                 return (

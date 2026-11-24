@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { avisar } from "@/lib/aviso";
 import { dataValida } from "@/lib/agenda";
 import { ehCategoria, lerPercentual, lerReais } from "@/lib/financeiro";
 
@@ -25,6 +26,7 @@ export async function registrarDespesa(_: EstadoForm, formData: FormData): Promi
 
   revalidatePath("/financeiro");
   // Volta para o mês da despesa.
+  await avisar("despesa-registrada");
   redirect(`/financeiro?mes=${data.slice(0, 7)}&aba=despesas`);
 }
 
@@ -32,6 +34,7 @@ export async function excluirDespesa(id: string, mes: string) {
   const supabase = await createClient();
   await supabase.from("despesas").delete().eq("id", id);
   revalidatePath("/financeiro");
+  await avisar("despesa-excluida");
   redirect(`/financeiro?mes=${mes}&aba=despesas`);
 }
 
@@ -61,5 +64,6 @@ export async function salvarTaxas(_: EstadoForm, formData: FormData): Promise<Es
 
   // As taxas valem para os próximos pagamentos; o resultado do mês já recalcula.
   revalidatePath("/", "layout");
+  await avisar("taxas-salvas");
   redirect("/financeiro");
 }
