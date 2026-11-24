@@ -36,7 +36,7 @@ export function Preco({ doSite }: { doSite: string }) {
 }
 
 function PrecoApple({ doSite }: { doSite: string }) {
-  const preco = usePrecoApple();
+  const { preco } = usePrecoApple();
   return <span className="text-3xl font-bold">{preco ?? doSite}</span>;
 }
 

@@ -16,15 +16,38 @@ async function plugin() {
 /** Preço como a App Store mostra para a pessoa (a Apple pede que venha dela, não fixo no app). */
 export function usePrecoApple() {
   const [preco, setPreco] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [tentativa, setTentativa] = useState(0);
   useEffect(() => {
-    plugin()
-      .then(({ NativePurchases, SUBS }) =>
+    let vivo = true;
+    // Sem resposta da App Store em 15 s: mostra o erro em vez de "Carregando…" para sempre.
+    const demorou = new Promise<never>((_, rejeitar) =>
+      setTimeout(() => rejeitar(new Error("A App Store não respondeu.")), 15_000),
+    );
+    Promise.race([
+      plugin().then(({ NativePurchases, SUBS }) =>
         NativePurchases.getProduct({ productIdentifier: PRODUTO_APPLE, productType: SUBS }),
-      )
-      .then(({ product }) => setPreco(product.priceString))
-      .catch(() => setPreco(null));
-  }, []);
-  return preco;
+      ),
+      demorou,
+    ])
+      .then(({ product }) => {
+        if (!vivo) return;
+        if (!product?.priceString) throw new Error("A App Store não encontrou a assinatura.");
+        setPreco(product.priceString);
+        setErro(null);
+      })
+      .catch((e) => {
+        if (vivo) setErro(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [tentativa]);
+  const tentarDeNovo = () => {
+    setErro(null);
+    setTentativa((t) => t + 1);
+  };
+  return { preco, erro, tentarDeNovo };
 }
 
 /** Versões antigas do app (instaladas antes da compra pela Apple) não têm o plugin. */
@@ -63,7 +86,7 @@ export function AssinarPelaApple({ tatuadorId }: { tatuadorId: string }) {
 
 function Comprar({ tatuadorId }: { tatuadorId: string }) {
   const router = useRouter();
-  const preco = usePrecoApple();
+  const { preco, erro: erroPreco, tentarDeNovo } = usePrecoApple();
   const [ocupado, setOcupado] = useState<"assinar" | "restaurar" | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -116,9 +139,18 @@ function Comprar({ tatuadorId }: { tatuadorId: string }) {
     <div className="flex flex-col gap-2">
       {erro && <p className="aviso-erro">{erro}</p>}
       {aviso && <p className="text-sm text-muted">{aviso}</p>}
-      <button type="button" className="botao" onClick={assinar} disabled={ocupado !== null || !preco}>
-        {ocupado === "assinar" ? "Abrindo…" : preco ? `Assinar por ${preco}/mês` : "Carregando…"}
-      </button>
+      {erroPreco && !preco ? (
+        <>
+          <p className="aviso-erro">Não foi possível carregar a assinatura da App Store. ({erroPreco})</p>
+          <button type="button" className="botao" onClick={tentarDeNovo}>
+            Tentar de novo
+          </button>
+        </>
+      ) : (
+        <button type="button" className="botao" onClick={assinar} disabled={ocupado !== null || !preco}>
+          {ocupado === "assinar" ? "Abrindo…" : preco ? `Assinar por ${preco}/mês` : "Carregando…"}
+        </button>
+      )}
       <button type="button" className="botao-secundario" onClick={restaurar} disabled={ocupado !== null}>
         {ocupado === "restaurar" ? "Procurando…" : "Restaurar compras"}
       </button>
