@@ -4,10 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { ExcluirForm } from "./excluir-form";
 
 export default async function ExcluirContaPage() {
-  // A assinatura da Apple só a própria pessoa cancela (o Ravenn não consegue cancelar por ela).
+  // A assinatura da Apple e a do Google Play só a própria pessoa cancela (o Ravenn não cancela por ela).
   const supabase = await createClient();
-  const { data: apple } = await supabase.from("assinaturas").select("apple_status").maybeSingle();
-  const appleRenova = apple?.apple_status === "ativa" || apple?.apple_status === "cobranca_falhou";
+  const { data: lojas } = await supabase.from("assinaturas").select("apple_status, google_status").maybeSingle();
+  const renova = (status?: string | null) => status === "ativa" || status === "cobranca_falhou" || status === "pausada";
+  const appleRenova = renova(lojas?.apple_status);
+  const googleRenova = renova(lojas?.google_status);
 
   return (
     <>
@@ -33,6 +35,12 @@ export default async function ExcluirContaPage() {
           <p className="aviso-erro">
             Sua assinatura é pela Apple e continua sendo cobrada mesmo depois de excluir a conta. Cancele antes no
             iPhone: Ajustes → seu nome → Assinaturas → Ravenn.
+          </p>
+        )}
+        {googleRenova && (
+          <p className="aviso-erro">
+            Sua assinatura é pelo Google Play e continua sendo cobrada mesmo depois de excluir a conta. Cancele antes
+            na Play Store: seu perfil → Pagamentos e assinaturas → Assinaturas → Ravenn.
           </p>
         )}
         <ExcluirForm />

@@ -1,6 +1,6 @@
 import type { Lembrete } from "./lembretes";
 
-// Notificações agendadas no próprio iPhone (só no app instalado pela loja, não no site).
+// Notificações agendadas no próprio celular (iPhone ou Android) (só no app instalado pela loja, não no site).
 // Os plugins são carregados só quando usados: no servidor e no navegador comum não existem.
 
 const CHAVE = "ravenn:lembretes"; // "desligado" quando o tatuador desliga em Conta
@@ -33,7 +33,7 @@ export async function estadoLembretes(): Promise<EstadoLembretes> {
   return display === "granted" ? "ligado" : display === "denied" ? "negado" : "pedir";
 }
 
-/** Pede a permissão do iPhone (a janela "Permitir notificações?") e agenda. */
+/** Pede a permissão do celular (a janela "Permitir notificações?") e agenda. */
 export async function ativarLembretes(): Promise<EstadoLembretes> {
   try {
     localStorage.removeItem(CHAVE);
@@ -71,6 +71,9 @@ export async function reagendar(lembretes: Lembrete[]) {
       title: l.titulo,
       body: l.corpo,
       schedule: { at: new Date(l.quando), allowWhileIdle: true },
+      // Android: sem alarme exato (senão o app abriria os ajustes de "Alarmes e lembretes"
+      // toda vez). O aviso pode sair com alguns minutos de folga. No iPhone não muda nada.
+      isExactNotification: false,
       extra: { url: l.url },
     })),
   });

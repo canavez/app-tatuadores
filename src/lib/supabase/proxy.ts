@@ -6,7 +6,7 @@ import { ROTAS_RESERVADAS } from "@/lib/orcamentos";
 // Abertas sem login: páginas que as lojas de apps e o Stripe conferem (política,
 // termos, suporte), o aviso automático do Stripe (webhook, que confere a própria
 // assinatura) e a página inicial "/" (só ela, não tudo que começa com "/").
-const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade", "/termos", "/suporte", "/api/stripe/webhook", "/api/apple/notificacoes"];
+const ROTAS_PUBLICAS = ["/login", "/auth", "/privacidade", "/termos", "/suporte", "/api/stripe/webhook", "/api/apple/notificacoes", "/api/google/notificacoes"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

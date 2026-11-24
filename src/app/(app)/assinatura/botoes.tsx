@@ -4,19 +4,26 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { assinar, gerenciar } from "./actions";
 import { AssinarPelaApple, GerenciarPelaApple, usePrecoApple } from "./apple";
+import { AssinarPeloGoogle, GerenciarPeloGoogle, usePrecoGoogle } from "./google";
+
+type Plataforma = "web" | "ios" | "android";
 
 /**
- * No app do iPhone a Apple não deixa vender assinatura por fora da App Store (nem pôr
- * botão ou link para pagar no site). Lá a compra é pela Apple; no site (ravenn.me), pelo Stripe.
+ * Nos apps a loja não deixa vender assinatura por fora dela (nem pôr botão ou link para pagar
+ * no site). No iPhone a compra é pela Apple, no Android pelo Google Play; no site (ravenn.me),
+ * pelo Stripe.
  */
-function useNoApp() {
-  const [noApp, setNoApp] = useState<boolean | null>(null);
+function usePlataforma() {
+  const [plataforma, setPlataforma] = useState<Plataforma | null>(null);
   useEffect(() => {
     import("@capacitor/core")
-      .then(({ Capacitor }) => setNoApp(Capacitor.isNativePlatform()))
-      .catch(() => setNoApp(false));
+      .then(({ Capacitor }) => {
+        const p = Capacitor.getPlatform();
+        setPlataforma(p === "ios" || p === "android" ? p : "web");
+      })
+      .catch(() => setPlataforma("web"));
   }, []);
-  return noApp;
+  return plataforma;
 }
 
 function Enviar({ children, classe }: { children: React.ReactNode; classe: string }) {
@@ -28,11 +35,13 @@ function Enviar({ children, classe }: { children: React.ReactNode; classe: strin
   );
 }
 
-/** Preço do card: no app, o que a App Store mostra; no site, o preço do Stripe. */
+/** Preço do card: no app, o que a loja (App Store ou Google Play) mostra; no site, o do Stripe. */
 export function Preco({ doSite }: { doSite: string }) {
-  const noApp = useNoApp();
-  if (noApp === null) return <span className="text-3xl font-bold">&nbsp;</span>;
-  return noApp ? <PrecoApple doSite={doSite} /> : <span className="text-3xl font-bold">{doSite}</span>;
+  const plataforma = usePlataforma();
+  if (plataforma === null) return <span className="text-3xl font-bold">&nbsp;</span>;
+  if (plataforma === "ios") return <PrecoApple doSite={doSite} />;
+  if (plataforma === "android") return <PrecoGoogle doSite={doSite} />;
+  return <span className="text-3xl font-bold">{doSite}</span>;
 }
 
 function PrecoApple({ doSite }: { doSite: string }) {
@@ -40,10 +49,16 @@ function PrecoApple({ doSite }: { doSite: string }) {
   return <span className="text-3xl font-bold">{preco ?? doSite}</span>;
 }
 
+function PrecoGoogle({ doSite }: { doSite: string }) {
+  const preco = usePrecoGoogle();
+  return <span className="text-3xl font-bold">{preco ?? doSite}</span>;
+}
+
 export function BotaoAssinar({ gratisAte, tatuadorId }: { gratisAte?: string; tatuadorId: string }) {
-  const noApp = useNoApp();
-  if (noApp === null) return null;
-  if (noApp) return <AssinarPelaApple tatuadorId={tatuadorId} />;
+  const plataforma = usePlataforma();
+  if (plataforma === null) return null;
+  if (plataforma === "ios") return <AssinarPelaApple tatuadorId={tatuadorId} />;
+  if (plataforma === "android") return <AssinarPeloGoogle tatuadorId={tatuadorId} />;
   return (
     <form action={assinar} className="flex flex-col gap-2">
       <Enviar classe="botao">Assinar</Enviar>
@@ -56,8 +71,8 @@ export function BotaoAssinar({ gratisAte, tatuadorId }: { gratisAte?: string; ta
 }
 
 export function BotaoGerenciar({ texto = "Gerenciar assinatura" }: { texto?: string }) {
-  const noApp = useNoApp();
-  if (noApp !== false) return null;
+  const plataforma = usePlataforma();
+  if (plataforma !== "web") return null;
   return (
     <form action={gerenciar} className="flex flex-col gap-2">
       <Enviar classe="botao-secundario">{texto}</Enviar>
@@ -67,7 +82,13 @@ export function BotaoGerenciar({ texto = "Gerenciar assinatura" }: { texto?: str
 }
 
 export function BotaoGerenciarApple() {
-  const noApp = useNoApp();
-  if (noApp === null) return null;
-  return <GerenciarPelaApple noApp={noApp} />;
+  const plataforma = usePlataforma();
+  if (plataforma === null) return null;
+  return <GerenciarPelaApple noApp={plataforma === "ios"} />;
+}
+
+export function BotaoGerenciarGoogle() {
+  const plataforma = usePlataforma();
+  if (plataforma === null) return null;
+  return <GerenciarPeloGoogle noAndroid={plataforma === "android"} />;
 }

@@ -121,6 +121,10 @@ export default function PrivacidadePage() {
             <span className="text-foreground">Apple</span> — pagamento da
             assinatura feita pelo iPhone, quando houver.
           </li>
+          <li>
+            <span className="text-foreground">Google</span> — pagamento da
+            assinatura feita pelo app de Android (Google Play), quando houver.
+          </li>
         </ul>
         <p>
           Esses serviços podem guardar os dados em servidores fora do Brasil,

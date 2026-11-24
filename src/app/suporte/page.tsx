@@ -39,7 +39,7 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
   {
     pergunta: "Como cancelo a assinatura?",
     resposta:
-      "Pelo site, em Conta → Assinatura → Gerenciar assinatura. Se assinou pelo iPhone, em Ajustes → seu nome → Assinaturas. O acesso continua até o fim do mês já pago.",
+      "Pelo site, em Conta → Assinatura → Gerenciar assinatura. Se assinou pelo iPhone, em Ajustes → seu nome → Assinaturas. Se assinou pelo Android, na Play Store → seu perfil → Pagamentos e assinaturas → Assinaturas. O acesso continua até o fim do mês já pago.",
   },
   {
     pergunta: "Posso pedir reembolso?",
@@ -59,13 +59,13 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
       "No app, em Conta → Excluir minha conta. Tudo é apagado na hora: conta, clientes, anamneses, termos, fotos, agenda, financeiro e estoque.",
   },
   {
-    pergunta: "Os lembretes de sessão não aparecem no iPhone.",
+    pergunta: "Os lembretes de sessão não aparecem no celular.",
     resposta:
-      "Os lembretes funcionam no app Ravenn da App Store. Confira em Conta → Lembretes se estão ativados e, nos Ajustes do iPhone → Ravenn → Notificações, se as notificações estão permitidas.",
+      "Os lembretes funcionam no app Ravenn instalado pela App Store ou pela Play Store. Confira em Conta → Lembretes se estão ativados e se as notificações do Ravenn estão permitidas: no iPhone, em Ajustes → Ravenn → Notificações; no Android, em Configurações → Apps → Ravenn → Notificações.",
   },
 ];
 
-/** Página de suporte (pública): é a "URL de suporte" pedida pela App Store. */
+/** Página de suporte (pública): é a "URL de suporte" pedida pela App Store e pela Play Store. */
 export default function SuportePage() {
   return (
     <PaginaPublica titulo="Suporte">

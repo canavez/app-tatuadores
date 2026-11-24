@@ -22,7 +22,7 @@ function useEstado() {
   return [estado, setEstado] as const;
 }
 
-/** Em Conta: liga e desliga os lembretes (só aparece no app do iPhone). */
+/** Em Conta: liga e desliga os lembretes (só aparece no app do iPhone e do Android). */
 export function ControleLembretes() {
   const [estado, setEstado] = useEstado();
   if (!estado || estado === "fora-do-app") return null;
@@ -40,7 +40,9 @@ export function ControleLembretes() {
         </div>
         {estado === "negado" ? (
           <p className="text-xs text-muted">
-            As notificações do Ravenn estão bloqueadas no iPhone. Para ligar, vá em Ajustes → Ravenn → Notificações.
+            {/android/i.test(navigator.userAgent)
+              ? "As notificações do Ravenn estão bloqueadas no celular. Para ligar, vá em Configurações → Apps → Ravenn → Notificações."
+              : "As notificações do Ravenn estão bloqueadas no iPhone. Para ligar, vá em Ajustes → Ravenn → Notificações."}
           </p>
         ) : estado === "ligado" ? (
           <button
@@ -64,7 +66,7 @@ export function ControleLembretes() {
   );
 }
 
-/** Na tela Hoje: convite para ativar, uma vez só (só no app do iPhone). */
+/** Na tela Hoje: convite para ativar, uma vez só (só no app do iPhone e do Android). */
 export function ConviteLembretes() {
   const [estado, setEstado] = useEstado();
   const [dispensado, setDispensado] = useState(() => {

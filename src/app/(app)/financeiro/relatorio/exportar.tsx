@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FileDown, ImageDown } from "lucide-react";
+import { compartilharImagem, imprimir, noAndroid } from "@/lib/celular";
 
 /**
  * "Baixar PDF" abre a impressão do navegador (onde se escolhe "Salvar como PDF");
@@ -19,12 +20,18 @@ export function Exportar({ nomeArquivo }: { nomeArquivo: string }) {
     try {
       const { toPng } = await import("html-to-image");
       const url = await toPng(relatorio, { pixelRatio: 2, backgroundColor: "#0b0b12", cacheBust: true });
+      // No app de Android não existe "baixar": abre o Compartilhar com a imagem.
+      if (await noAndroid()) {
+        await compartilharImagem(url, nomeArquivo);
+        return;
+      }
       const link = document.createElement("a");
       link.href = url;
       link.download = `${nomeArquivo}.png`;
       link.click();
-    } catch {
-      setErro(true);
+    } catch (e) {
+      // Fechar o Compartilhar sem escolher nada não é erro.
+      if (!(e instanceof Error && /cancel/i.test(e.message))) setErro(true);
     } finally {
       setGerando(false);
     }
@@ -33,7 +40,7 @@ export function Exportar({ nomeArquivo }: { nomeArquivo: string }) {
   return (
     <div className="flex flex-col gap-2 print:hidden">
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => window.print()} className="botao gap-2 py-2.5">
+        <button type="button" onClick={() => imprimir(nomeArquivo)} className="botao gap-2 py-2.5">
           <FileDown className="size-4" />
           Baixar PDF
         </button>
